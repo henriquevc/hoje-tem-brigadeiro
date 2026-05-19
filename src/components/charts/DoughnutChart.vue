@@ -12,11 +12,11 @@ const props = defineProps<{
 }>()
 
 const palette = [
-  'oklch(0.65 0.2 35)',
-  'oklch(0.6 0.15 145)',
-  'oklch(0.55 0.12 250)',
-  'oklch(0.7 0.18 85)',
-  'oklch(0.5 0.14 320)',
+  'oklch(0.45 0.09 52)',
+  'oklch(0.78 0.09 355)',
+  'oklch(0.58 0.08 52)',
+  'oklch(0.88 0.06 355)',
+  'oklch(0.65 0.07 40)',
 ]
 
 const chartData = computed(() => ({

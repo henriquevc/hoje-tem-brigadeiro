@@ -113,7 +113,7 @@ async function submit() {
 
         <div
           v-if="selectedProduct"
-          class="rounded-lg border bg-muted/50 p-3 text-sm"
+          class="rounded-lg border border-secondary bg-secondary/60 p-3 text-sm"
         >
           <p>
             <span class="text-muted-foreground">Venda unitária:</span>

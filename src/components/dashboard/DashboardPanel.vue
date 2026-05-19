@@ -18,12 +18,12 @@ const monthChart = computed(() => ({
     {
       label: 'Receita',
       data: salesByDayInMonth.value.map((d) => d.receita),
-      backgroundColor: 'oklch(0.65 0.2 35 / 0.85)',
+      backgroundColor: 'oklch(0.45 0.09 52 / 0.88)',
     },
     {
       label: 'Lucro',
       data: salesByDayInMonth.value.map((d) => d.lucro),
-      backgroundColor: 'oklch(0.6 0.15 145 / 0.85)',
+      backgroundColor: 'oklch(0.78 0.09 355 / 0.88)',
     },
   ],
 }))

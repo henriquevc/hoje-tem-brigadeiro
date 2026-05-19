@@ -29,13 +29,13 @@ function formatDate(iso: string) {
 <template>
   <Table>
     <TableHeader>
-      <TableRow class="bg-orange-500/90 hover:bg-orange-500/90">
-        <TableHead class="text-white">Data</TableHead>
-        <TableHead class="text-white">Qtde</TableHead>
-        <TableHead class="text-white">Produto</TableHead>
-        <TableHead class="text-right text-white">Valor venda</TableHead>
-        <TableHead class="text-right text-white">Preço custo</TableHead>
-        <TableHead class="text-right text-white">Lucro</TableHead>
+      <TableRow class="bg-primary hover:bg-primary">
+        <TableHead class="text-primary-foreground">Data</TableHead>
+        <TableHead class="text-primary-foreground">Qtde</TableHead>
+        <TableHead class="text-primary-foreground">Produto</TableHead>
+        <TableHead class="text-right text-primary-foreground">Valor venda</TableHead>
+        <TableHead class="text-right text-primary-foreground">Preço custo</TableHead>
+        <TableHead class="text-right text-primary-foreground">Lucro</TableHead>
         <TableHead class="w-12" />
       </TableRow>
     </TableHeader>

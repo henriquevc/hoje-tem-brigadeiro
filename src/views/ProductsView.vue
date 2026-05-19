@@ -31,11 +31,11 @@ const store = useBrigadeiroStore()
     <div class="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader>
-          <TableRow class="bg-blue-900/90 hover:bg-blue-900/90">
-            <TableHead class="text-white">Produto</TableHead>
-            <TableHead class="text-right text-white">Valor de venda</TableHead>
-            <TableHead class="text-right text-white">Preço de custo</TableHead>
-            <TableHead class="text-right text-white">Margem</TableHead>
+          <TableRow class="bg-secondary hover:bg-secondary">
+            <TableHead class="text-secondary-foreground">Produto</TableHead>
+            <TableHead class="text-right text-secondary-foreground">Valor de venda</TableHead>
+            <TableHead class="text-right text-secondary-foreground">Preço de custo</TableHead>
+            <TableHead class="text-right text-secondary-foreground">Margem</TableHead>
             <TableHead class="w-24" />
           </TableRow>
         </TableHeader>
