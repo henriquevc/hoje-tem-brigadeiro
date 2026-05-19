@@ -3,6 +3,7 @@ export interface Product {
   nome: string
   valor_venda: number
   preco_custo: number
+  ativo: boolean
   created_at: string
 }
 
@@ -28,6 +29,7 @@ export interface ProductInput {
   nome: string
   valor_venda: number
   preco_custo: number
+  ativo?: boolean
 }
 
 export interface DashboardStats {

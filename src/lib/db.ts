@@ -7,7 +7,7 @@ export class BrigadeiroDB extends Dexie {
 
   constructor() {
     super('BrigadeiroVendasDB')
-    this.version(1).stores({
+    this.version(2).stores({
       products: 'id, nome, created_at',
       sales: 'id, data, produto_id, created_at',
     })

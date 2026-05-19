@@ -36,12 +36,13 @@ const store = useBrigadeiroStore()
             <TableHead class="text-right text-secondary-foreground">Valor de venda</TableHead>
             <TableHead class="text-right text-secondary-foreground">Preço de custo</TableHead>
             <TableHead class="text-right text-secondary-foreground">Margem</TableHead>
+            <TableHead class="text-center text-secondary-foreground">Ativo</TableHead>
             <TableHead class="w-24" />
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow v-if="store.products.length === 0">
-            <TableCell colspan="5" class="h-24 text-center text-muted-foreground">
+            <TableCell colspan="6" class="h-24 text-center text-muted-foreground">
               Nenhum produto cadastrado.
             </TableCell>
           </TableRow>
@@ -53,6 +54,13 @@ const store = useBrigadeiroStore()
             </TableCell>
             <TableCell class="text-right text-emerald-600 dark:text-emerald-400">
               {{ formatCurrency(product.valor_venda - product.preco_custo) }}
+            </TableCell>
+            <TableCell class="text-center">
+              <span
+                :class="product.ativo ? 'text-green-600 dark:text-green-400' : 'text-gray-400'"
+              >
+                {{ product.ativo ? '✓' : '✗' }}
+              </span>
             </TableCell>
             <TableCell class="flex justify-end gap-1">
               <ProductFormDialog :product="product" />

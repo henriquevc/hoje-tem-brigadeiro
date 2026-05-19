@@ -40,6 +40,7 @@ async function createProductDexie(input: ProductInput): Promise<Product> {
   const product: Product = {
     id: newId(),
     ...input,
+    ativo: input.ativo ?? true,
     created_at: new Date().toISOString(),
   }
   await db.products.add(product)
@@ -47,9 +48,13 @@ async function createProductDexie(input: ProductInput): Promise<Product> {
 }
 
 async function createProductSupabase(input: ProductInput): Promise<Product> {
+  const payload = {
+    ...input,
+    ativo: input.ativo ?? true,
+  }
   const { data, error } = await supabase!
     .from('products')
-    .insert(input)
+    .insert(payload)
     .select()
     .single()
   if (error) throw error

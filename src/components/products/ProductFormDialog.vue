@@ -25,6 +25,7 @@ const open = ref(false)
 const nome = ref('')
 const valorVenda = ref(0)
 const precoCusto = ref(0)
+const ativo = ref(true)
 
 const isEdit = () => Boolean(props.product)
 
@@ -34,10 +35,12 @@ watch(open, (isOpen) => {
     nome.value = props.product.nome
     valorVenda.value = props.product.valor_venda
     precoCusto.value = props.product.preco_custo
+    ativo.value = props.product.ativo
   } else {
     nome.value = ''
     valorVenda.value = 12
     precoCusto.value = 4.4
+    ativo.value = true
   }
 })
 
@@ -46,6 +49,7 @@ async function submit() {
     nome: nome.value.trim(),
     valor_venda: valorVenda.value,
     preco_custo: precoCusto.value,
+    ativo: ativo.value,
   }
   if (!input.nome) return
 
@@ -110,6 +114,15 @@ async function submit() {
               required
             />
           </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input
+            id="ativo"
+            v-model="ativo"
+            type="checkbox"
+            class="h-4 w-4 rounded border-gray-300"
+          />
+          <Label for="ativo" class="cursor-pointer">Ativo</Label>
         </div>
       </form>
 

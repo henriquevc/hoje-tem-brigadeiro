@@ -44,7 +44,8 @@ watch(open, (isOpen) => {
   if (isOpen) {
     data.value = format(new Date(), 'yyyy-MM-dd')
     quantidade.value = 1
-    produtoId.value = store.products[0]?.id ?? ''
+    const activeProducts = store.products.filter(p => p.ativo)
+    produtoId.value = activeProducts[0]?.id ?? ''
   }
 })
 
@@ -89,7 +90,7 @@ async function submit() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem
-                v-for="p in store.products"
+                v-for="p in store.products.filter(p => p.ativo)"
                 :key="p.id"
                 :value="p.id"
               >
@@ -142,7 +143,7 @@ async function submit() {
         <Button variant="outline" type="button" @click="open = false">Cancelar</Button>
         <Button
           type="button"
-          :disabled="!produtoId || store.products.length === 0"
+          :disabled="!produtoId || store.products.filter(p => p.ativo).length === 0"
           @click="submit"
         >
           Salvar venda
