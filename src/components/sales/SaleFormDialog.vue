@@ -100,15 +100,24 @@ async function submit() {
         </div>
 
         <div class="grid gap-2">
-          <Label for="qtde">Quantidade</Label>
-          <Input
-            id="qtde"
-            v-model.number="quantidade"
-            type="number"
-            min="1"
-            step="1"
-            required
-          />
+          <Label>Quantidade</Label>
+          <Select
+            :model-value="quantidade.toString()"
+            @update:model-value="quantidade = Number($event)"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a quantidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="n in 5"
+                :key="n"
+                :value="n.toString()"
+              >
+                {{ n }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div
