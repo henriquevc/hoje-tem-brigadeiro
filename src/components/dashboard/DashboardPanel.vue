@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
-import { Cake, Calendar, Package, TrendingUp, Wallet } from '@lucide/vue'
+import { Calendar, Package, TrendingUp, Wallet } from '@lucide/vue'
+import CupcakeIcon from '@/components/icons/CupcakeIcon.vue'
 import BarChart from '@/components/charts/BarChart.vue'
 import DoughnutChart from '@/components/charts/DoughnutChart.vue'
 import StatCard from '@/components/dashboard/StatCard.vue'
@@ -90,7 +91,7 @@ const topChart = computed(() => ({
       <Card>
         <CardHeader>
           <CardTitle class="flex items-center gap-2 text-lg">
-            <Cake class="size-5 text-primary" />
+            <CupcakeIcon class="size-5 text-primary" />
             Mais vendidos
           </CardTitle>
           <CardDescription>Ranking por quantidade</CardDescription>

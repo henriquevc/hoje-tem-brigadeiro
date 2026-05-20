@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
-import { Cake, LayoutDashboard, Package } from '@lucide/vue'
+import { LayoutDashboard, Package } from '@lucide/vue'
+import CupcakeIcon from '@/components/icons/CupcakeIcon.vue'
 import { Badge } from '@/components/ui/badge'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
 
@@ -19,7 +20,7 @@ const links = [
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <RouterLink to="/" class="flex items-center gap-2 font-semibold text-foreground">
           <div class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Cake class="size-5" />
+            <CupcakeIcon class="size-5" />
           </div>
           <span class="hidden sm:inline">Hoje tem brigadeiro</span>
         </RouterLink>
