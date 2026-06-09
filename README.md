@@ -40,9 +40,16 @@ Ao registrar uma venda, **preço de custo e valor de venda** são copiados da ta
 ```env
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_APP_PASSWORD=sua-senha-segura
 ```
 
 5. Reinicie `npm run dev`. O badge no topo mostrará **Supabase**.
+
+## Senha de acesso
+
+Defina `VITE_APP_PASSWORD` no `.env` para exigir senha ao abrir o sistema. Sem essa variável, o app continua aberto (útil só em desenvolvimento local).
+
+Ao publicar na Vercel/Netlify, adicione `VITE_APP_PASSWORD` nas variáveis de ambiente do host.
 
 Sem `.env`, os dados ficam no **IndexedDB** do navegador (badge **IndexedDB**).
 
@@ -53,7 +60,7 @@ Sem `.env`, os dados ficam no **IndexedDB** do navegador (badge **IndexedDB**).
 1. Envie o repositório para o GitHub.
 2. Em [vercel.com](https://vercel.com) ou [netlify.com](https://netlify.com), importe o projeto.
 3. Build: `npm run build` · Output: `dist`
-4. Adicione as variáveis `VITE_SUPABASE_*` no painel do host (recomendado para não perder dados ao trocar de dispositivo).
+4. Adicione `VITE_SUPABASE_*` e `VITE_APP_PASSWORD` no painel do host.
 
 O arquivo `vercel.json` já configura SPA fallback.
 

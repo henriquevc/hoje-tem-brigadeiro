@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router'
-import { LayoutDashboard, Package } from '@lucide/vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { LayoutDashboard, LogOut, Package } from '@lucide/vue'
 import CupcakeIcon from '@/components/icons/CupcakeIcon.vue'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/auth'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
 
 const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
 const store = useBrigadeiroStore()
+
+function logout() {
+  auth.logout()
+  router.push({ name: 'login' })
+}
 
 const links = [
   { to: '/', label: 'Vendas', icon: LayoutDashboard },
@@ -42,9 +51,22 @@ const links = [
           </RouterLink>
         </nav>
 
-        <Badge variant="secondary" class="hidden text-xs sm:inline-flex">
-          {{ store.storageMode === 'supabase' ? 'Supabase' : 'IndexedDB' }}
-        </Badge>
+        <div class="flex items-center gap-2">
+          <Badge variant="secondary" class="hidden text-xs sm:inline-flex">
+            {{ store.storageMode === 'supabase' ? 'Supabase' : 'IndexedDB' }}
+          </Badge>
+          <Button
+            v-if="auth.isRequired"
+            variant="ghost"
+            size="sm"
+            class="text-muted-foreground"
+            title="Sair"
+            @click="logout"
+          >
+            <LogOut class="size-4" />
+            <span class="hidden sm:inline">Sair</span>
+          </Button>
+        </div>
       </div>
     </header>
 

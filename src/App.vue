@@ -1,17 +1,33 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import { useAuthStore } from '@/stores/auth'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
 
+const auth = useAuthStore()
 const store = useBrigadeiroStore()
 
-onMounted(() => {
-  store.init()
-})
+function initData() {
+  if (auth.isAuthenticated || !auth.isRequired) {
+    store.init()
+  }
+}
+
+onMounted(initData)
+
+watch(
+  () => auth.isAuthenticated,
+  (authenticated) => {
+    if (authenticated && !store.initialized) {
+      store.init()
+    }
+  },
+)
 </script>
 
 <template>
-  <AppLayout>
+  <RouterView v-if="!auth.isRequired || !auth.isAuthenticated" />
+  <AppLayout v-else>
     <div v-if="store.loading && !store.initialized" class="flex min-h-[40vh] items-center justify-center">
       <p class="text-muted-foreground">Carregando...</p>
     </div>
