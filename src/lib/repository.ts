@@ -147,6 +147,46 @@ async function createSaleSupabase(input: SaleInput): Promise<Sale> {
   return data as Sale
 }
 
+async function updateSaleDexie(id: string, input: SaleInput): Promise<Sale> {
+  const existing = await db.sales.get(id)
+  if (!existing) throw new Error('Venda não encontrada')
+
+  const product = await getProductDexie(input.produto_id)
+  if (!product) throw new Error('Produto não encontrado')
+
+  const updated: Sale = {
+    ...existing,
+    data: input.data,
+    quantidade: input.quantidade,
+    produto_id: product.id,
+    produto_nome: product.nome,
+    valor_venda: product.valor_venda,
+    preco_custo: product.preco_custo,
+    lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
+  }
+  await db.sales.put(updated)
+  return updated
+}
+
+async function updateSaleSupabase(id: string, input: SaleInput): Promise<Sale> {
+  const product = await getProductSupabase(input.produto_id)
+  if (!product) throw new Error('Produto não encontrado')
+
+  const row = {
+    data: input.data,
+    quantidade: input.quantidade,
+    produto_id: product.id,
+    produto_nome: product.nome,
+    valor_venda: product.valor_venda,
+    preco_custo: product.preco_custo,
+    lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
+  }
+
+  const { data, error } = await supabase!.from('sales').update(row).eq('id', id).select().single()
+  if (error) throw error
+  return data as Sale
+}
+
 async function deleteSaleDexie(id: string): Promise<void> {
   await db.sales.delete(id)
 }
@@ -187,6 +227,10 @@ export const repository = {
 
   createSale(input: SaleInput): Promise<Sale> {
     return isSupabaseConfigured ? createSaleSupabase(input) : createSaleDexie(input)
+  },
+
+  updateSale(id: string, input: SaleInput): Promise<Sale> {
+    return isSupabaseConfigured ? updateSaleSupabase(id, input) : updateSaleDexie(id, input)
   },
 
   deleteSale(id: string): Promise<void> {

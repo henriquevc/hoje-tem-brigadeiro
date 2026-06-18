@@ -54,6 +54,11 @@ export const useBrigadeiroStore = defineStore('brigadeiro', () => {
     await refresh()
   }
 
+  async function updateSale(id: string, input: SaleInput) {
+    await repository.updateSale(id, input)
+    await refresh()
+  }
+
   async function removeSale(id: string) {
     await repository.deleteSale(id)
     await refresh()
@@ -72,6 +77,7 @@ export const useBrigadeiroStore = defineStore('brigadeiro', () => {
     updateProduct,
     removeProduct,
     addSale,
+    updateSale,
     removeSale,
   }
 })
