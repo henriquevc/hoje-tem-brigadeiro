@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { LayoutDashboard, LogOut, Package } from '@lucide/vue'
+import { LayoutDashboard, LogOut, Package, Calculator } from '@lucide/vue'
 import CupcakeIcon from '@/components/icons/CupcakeIcon.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,7 @@ function logout() {
 const links = [
   { to: '/', label: 'Vendas', icon: LayoutDashboard },
   { to: '/produtos', label: 'Produtos', icon: Package },
+  { to: '/calculadora', label: 'Custos', icon: Calculator },
 ]
 </script>
 
