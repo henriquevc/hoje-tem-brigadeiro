@@ -291,6 +291,27 @@ export const useCalculatorStore = defineStore('calculator', () => {
     recipes.value.push(newRecipe)
   }
 
+  async function updateRecipe(id: string, updated: Omit<Recipe, 'id' | 'created_at'>) {
+    if (isSupabaseConfigured) {
+      try {
+        const { error: updateError } = await supabase!
+          .from('recipes')
+          .update(updated)
+          .eq('id', id)
+        if (updateError) throw updateError
+      } catch (e) {
+        console.error('Erro ao atualizar receita no Supabase:', e)
+      }
+    }
+    const idx = recipes.value.findIndex(r => r.id === id)
+    if (idx !== -1) {
+      recipes.value[idx] = {
+        ...recipes.value[idx],
+        ...updated,
+      }
+    }
+  }
+
   async function removeRecipe(id: string) {
     if (isSupabaseConfigured) {
       try {
@@ -319,6 +340,7 @@ export const useCalculatorStore = defineStore('calculator', () => {
     getIngredientCost,
     getRecipeTotalCost,
     addRecipe,
+    updateRecipe,
     removeRecipe,
   }
 })

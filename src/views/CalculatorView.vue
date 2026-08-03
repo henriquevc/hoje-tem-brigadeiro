@@ -48,6 +48,18 @@ const ingUnit = ref<'g' | 'kg' | 'ml' | 'L' | 'un' | 'pct' | 'cx'>('g')
 const recipeName = ref('')
 const recipeYield = ref(1)
 const recipeIngredients = ref<RecipeIngredient[]>([])
+const editingRecipeId = ref<string | null>(null)
+
+const isRecipeNameChanged = computed(() => {
+  if (!editingRecipeId.value) return false
+  const original = calculatorStore.recipes.find((r) => r.id === editingRecipeId.value)
+  return original ? original.nome !== recipeName.value : false
+})
+
+const saveRecipeButtonText = computed(() => {
+  if (!editingRecipeId.value) return 'Salvar no Histórico'
+  return isRecipeNameChanged.value ? 'Salvar como Novo' : 'Salvar Alterações'
+})
 
 const selectedPantryIngId = ref('')
 const usedQty = ref<number | undefined>(undefined)
@@ -173,22 +185,45 @@ const sortedIngredients = computed(() => {
 function handleSaveRecipe() {
   if (!recipeName.value || recipeIngredients.value.length === 0) return
 
-  calculatorStore.addRecipe({
+  const recipeData = {
     nome: recipeName.value,
     rendimento: recipeYield.value,
     ingredientes: [...recipeIngredients.value],
-  })
+  }
+
+  if (editingRecipeId.value) {
+    const original = calculatorStore.recipes.find((r) => r.id === editingRecipeId.value)
+    if (original && original.nome !== recipeName.value) {
+      // Nome mudou, cria uma nova receita
+      calculatorStore.addRecipe(recipeData)
+    } else {
+      // Nome é o mesmo, atualiza a atual
+      calculatorStore.updateRecipe(editingRecipeId.value, recipeData)
+    }
+  } else {
+    // Nova receita
+    calculatorStore.addRecipe(recipeData)
+  }
 
   // Limpar formulário de receita
   recipeName.value = ''
   recipeYield.value = 1
   recipeIngredients.value = []
+  editingRecipeId.value = null
 }
 
 function loadSavedRecipe(recipe: any) {
+  editingRecipeId.value = recipe.id
   recipeName.value = recipe.nome
   recipeYield.value = recipe.rendimento
   recipeIngredients.value = [...recipe.ingredientes]
+}
+
+function cancelEditRecipe() {
+  editingRecipeId.value = null
+  recipeName.value = ''
+  recipeYield.value = 1
+  recipeIngredients.value = []
 }
 
 // --- LÓGICA DE EXPORTAR COMO PRODUTO ---
@@ -571,13 +606,21 @@ async function handleExportToProducts() {
             <!-- Ações da Receita -->
             <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
               <Button
+                v-if="editingRecipeId"
+                variant="ghost"
+                class="text-xs"
+                @click="cancelEditRecipe"
+              >
+                Cancelar Edição
+              </Button>
+              <Button
                 variant="outline"
                 :disabled="!recipeName || recipeIngredients.length === 0"
                 class="flex items-center gap-2"
                 @click="handleSaveRecipe"
               >
                 <Save class="size-4" />
-                Salvar no Histórico
+                {{ saveRecipeButtonText }}
               </Button>
               <Button
                 :disabled="recipeIngredients.length === 0"
