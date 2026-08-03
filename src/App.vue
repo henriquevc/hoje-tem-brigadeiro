@@ -3,13 +3,16 @@ import { onMounted, watch } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
+import { useCalculatorStore } from '@/stores/calculator'
 
 const auth = useAuthStore()
 const store = useBrigadeiroStore()
+const calculatorStore = useCalculatorStore()
 
 function initData() {
   if (auth.isAuthenticated || !auth.isRequired) {
     store.init()
+    calculatorStore.init()
   }
 }
 
@@ -18,8 +21,13 @@ onMounted(initData)
 watch(
   () => auth.isAuthenticated,
   (authenticated) => {
-    if (authenticated && !store.initialized) {
-      store.init()
+    if (authenticated) {
+      if (!store.initialized) {
+        store.init()
+      }
+      if (!calculatorStore.initialized) {
+        calculatorStore.init()
+      }
     }
   },
 )

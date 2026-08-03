@@ -165,6 +165,10 @@ const suggestedSalePrice = computed(() => {
   return recipeUnitCost.value * (1 + marginPercent.value / 100)
 })
 
+const sortedIngredients = computed(() => {
+  return [...calculatorStore.ingredients].sort((a, b) => a.nome.localeCompare(b.nome))
+})
+
 // --- AÇÕES COM A RECEITA ---
 function handleSaveRecipe() {
   if (!recipeName.value || recipeIngredients.value.length === 0) return
@@ -333,7 +337,7 @@ async function handleExportToProducts() {
             </div>
             <div v-else class="space-y-2">
               <div
-                v-for="ing in calculatorStore.ingredients"
+                v-for="ing in sortedIngredients"
                 :key="ing.id"
                 class="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
                 :class="{ 'border-primary bg-primary/5': editingIngredientId === ing.id }"
@@ -416,7 +420,7 @@ async function handleExportToProducts() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem
-                        v-for="ing in calculatorStore.ingredients"
+                        v-for="ing in sortedIngredients"
                         :key="ing.id"
                         :value="ing.id"
                       >
