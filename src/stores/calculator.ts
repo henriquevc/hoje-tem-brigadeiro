@@ -148,39 +148,17 @@ export const useCalculatorStore = defineStore('calculator', () => {
             localStorage.setItem('hoje-tem-brigadeiro:calculator-synced', 'true')
           }
 
-          // Se estiver totalmente vazio, inicializa com alguns itens padrão no Supabase
-          if (sIngredients.length === 0 && sRecipes.length === 0) {
-            const defaultIngredients = [
-              { id: '1', nome: 'Leite condensado', preco: 5.99, quantidade: 395, unidade: 'g' },
-              { id: '2', nome: 'Farinha de trigo', preco: 10.00, quantidade: 1, unidade: 'kg' },
-            ] as PantryIngredient[]
-            for (const ing of defaultIngredients) {
-              await supabase!.from('pantry_ingredients').insert(ing)
-              sIngredients.push(ing)
-            }
-          }
-
           ingredients.value = sIngredients
           recipes.value = sRecipes
         } catch (e) {
           console.error('Erro ao conectar ou ler dados do Supabase. Usando backup local:', e)
-          ingredients.value = localIngredients.length > 0 ? localIngredients : [
-            { id: '1', nome: 'Leite condensado', preco: 5.99, quantidade: 395, unidade: 'g' },
-            { id: '2', nome: 'Farinha de trigo', preco: 10.00, quantidade: 1, unidade: 'kg' },
-          ]
+          ingredients.value = localIngredients
           recipes.value = localRecipes
         }
       } else {
         // Sem Supabase, usa local de forma transparente
-        if (localIngredients.length === 0 && localRecipes.length === 0) {
-          ingredients.value = [
-            { id: '1', nome: 'Leite condensado', preco: 5.99, quantidade: 395, unidade: 'g' },
-            { id: '2', nome: 'Farinha de trigo', preco: 10.00, quantidade: 1, unidade: 'kg' },
-          ]
-        } else {
-          ingredients.value = localIngredients
-          recipes.value = localRecipes
-        }
+        ingredients.value = localIngredients
+        recipes.value = localRecipes
       }
       initialized.value = true
     } catch (e) {
@@ -241,7 +219,7 @@ export const useCalculatorStore = defineStore('calculator', () => {
       ...recipe,
       ingredientes: recipe.ingredientes.filter(ri => ri.ingredienteId !== id)
     }))
-    
+
     // Se alguma receita foi modificada, atualiza no Supabase
     if (isSupabaseConfigured) {
       for (const recipe of recipes.value) {
