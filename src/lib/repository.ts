@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import type { Product, ProductInput, Sale, SaleInput } from '@/types'
+import type { Client, ClientInput, Product, ProductInput, Sale, SaleInput } from '@/types'
 
 function newId(): string {
   return crypto.randomUUID()
@@ -25,6 +25,10 @@ async function seedIfEmpty(): Promise<void> {
     }
   }
 }
+
+// ==========================================
+// PRODUTOS
+// ==========================================
 
 async function listProductsDexie(): Promise<Product[]> {
   return db.products.orderBy('nome').toArray()
@@ -99,6 +103,113 @@ async function getProductSupabase(id: string): Promise<Product | undefined> {
   return (data as Product) ?? undefined
 }
 
+// ==========================================
+// CLIENTES
+// ==========================================
+
+async function listClientsDexie(): Promise<Client[]> {
+  return db.clients.orderBy('nome').toArray()
+}
+
+async function listClientsSupabase(): Promise<Client[]> {
+  const { data, error } = await supabase!.from('clients').select('*').order('nome')
+  if (error) throw error
+  return data as Client[]
+}
+
+async function getClientDexie(id: string): Promise<Client | undefined> {
+  return db.clients.get(id)
+}
+
+async function getClientSupabase(id: string): Promise<Client | undefined> {
+  const { data, error } = await supabase!.from('clients').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return (data as Client) ?? undefined
+}
+
+async function createClientDexie(input: ClientInput): Promise<Client> {
+  const client: Client = {
+    id: newId(),
+    nome: input.nome.trim(),
+    apartamento: input.apartamento.trim(),
+    ativo: input.ativo ?? true,
+    created_at: new Date().toISOString(),
+  }
+  await db.clients.add(client)
+  return client
+}
+
+async function createClientSupabase(input: ClientInput): Promise<Client> {
+  const payload = {
+    nome: input.nome.trim(),
+    apartamento: input.apartamento.trim(),
+    ativo: input.ativo ?? true,
+  }
+  const { data, error } = await supabase!
+    .from('clients')
+    .insert(payload)
+    .select()
+    .single()
+  if (error) throw error
+  return data as Client
+}
+
+async function updateClientDexie(id: string, input: ClientInput): Promise<Client> {
+  const existing = await db.clients.get(id)
+  if (!existing) throw new Error('Cliente não encontrado')
+  const updated: Client = {
+    ...existing,
+    nome: input.nome.trim(),
+    apartamento: input.apartamento.trim(),
+    ativo: input.ativo !== undefined ? input.ativo : existing.ativo,
+  }
+  await db.clients.put(updated)
+  return updated
+}
+
+async function updateClientSupabase(id: string, input: ClientInput): Promise<Client> {
+  const payload: Partial<ClientInput> = {
+    nome: input.nome.trim(),
+    apartamento: input.apartamento.trim(),
+  }
+  if (input.ativo !== undefined) {
+    payload.ativo = input.ativo
+  }
+  const { data, error } = await supabase!
+    .from('clients')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data as Client
+}
+
+async function deleteClientDexie(id: string): Promise<void> {
+  const salesCount = await db.sales.where('cliente_id').equals(id).count()
+  if (salesCount > 0) {
+    throw new Error('Não é possível excluir um cliente que possui vendas vinculadas. Em vez disso, inative-o.')
+  }
+  await db.clients.delete(id)
+}
+
+async function deleteClientSupabase(id: string): Promise<void> {
+  const { count, error: countError } = await supabase!
+    .from('sales')
+    .select('id', { count: 'exact', head: true })
+    .eq('cliente_id', id)
+  if (countError) throw countError
+  if (count && count > 0) {
+    throw new Error('Não é possível excluir um cliente que possui vendas vinculadas. Em vez disso, inative-o.')
+  }
+  const { error } = await supabase!.from('clients').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ==========================================
+// VENDAS
+// ==========================================
+
 async function listSalesDexie(): Promise<Sale[]> {
   return db.sales.orderBy('data').reverse().toArray()
 }
@@ -113,12 +224,24 @@ async function createSaleDexie(input: SaleInput): Promise<Sale> {
   const product = await getProductDexie(input.produto_id)
   if (!product) throw new Error('Produto não encontrado')
 
+  let cliente_id: string | null = null
+  let cliente_nome: string | null = null
+  if (input.cliente_id) {
+    const client = await getClientDexie(input.cliente_id)
+    if (client) {
+      cliente_id = client.id
+      cliente_nome = `${client.nome} ${client.apartamento}`
+    }
+  }
+
   const sale: Sale = {
     id: newId(),
     data: input.data,
     quantidade: input.quantidade,
     produto_id: product.id,
     produto_nome: product.nome,
+    cliente_id,
+    cliente_nome,
     valor_venda: product.valor_venda,
     preco_custo: product.preco_custo,
     lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
@@ -132,11 +255,23 @@ async function createSaleSupabase(input: SaleInput): Promise<Sale> {
   const product = await getProductSupabase(input.produto_id)
   if (!product) throw new Error('Produto não encontrado')
 
+  let cliente_id: string | null = null
+  let cliente_nome: string | null = null
+  if (input.cliente_id) {
+    const client = await getClientSupabase(input.cliente_id)
+    if (client) {
+      cliente_id = client.id
+      cliente_nome = `${client.nome} ${client.apartamento}`
+    }
+  }
+
   const row = {
     data: input.data,
     quantidade: input.quantidade,
     produto_id: product.id,
     produto_nome: product.nome,
+    cliente_id,
+    cliente_nome,
     valor_venda: product.valor_venda,
     preco_custo: product.preco_custo,
     lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
@@ -154,12 +289,24 @@ async function updateSaleDexie(id: string, input: SaleInput): Promise<Sale> {
   const product = await getProductDexie(input.produto_id)
   if (!product) throw new Error('Produto não encontrado')
 
+  let cliente_id: string | null = null
+  let cliente_nome: string | null = null
+  if (input.cliente_id) {
+    const client = await getClientDexie(input.cliente_id)
+    if (client) {
+      cliente_id = client.id
+      cliente_nome = `${client.nome} ${client.apartamento}`
+    }
+  }
+
   const updated: Sale = {
     ...existing,
     data: input.data,
     quantidade: input.quantidade,
     produto_id: product.id,
     produto_nome: product.nome,
+    cliente_id,
+    cliente_nome,
     valor_venda: product.valor_venda,
     preco_custo: product.preco_custo,
     lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
@@ -172,11 +319,23 @@ async function updateSaleSupabase(id: string, input: SaleInput): Promise<Sale> {
   const product = await getProductSupabase(input.produto_id)
   if (!product) throw new Error('Produto não encontrado')
 
+  let cliente_id: string | null = null
+  let cliente_nome: string | null = null
+  if (input.cliente_id) {
+    const client = await getClientSupabase(input.cliente_id)
+    if (client) {
+      cliente_id = client.id
+      cliente_nome = `${client.nome} ${client.apartamento}`
+    }
+  }
+
   const row = {
     data: input.data,
     quantidade: input.quantidade,
     produto_id: product.id,
     produto_nome: product.nome,
+    cliente_id,
+    cliente_nome,
     valor_venda: product.valor_venda,
     preco_custo: product.preco_custo,
     lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
@@ -201,6 +360,7 @@ export const repository = {
     await seedIfEmpty()
   },
 
+  // Produtos
   listProducts(): Promise<Product[]> {
     return isSupabaseConfigured ? listProductsSupabase() : listProductsDexie()
   },
@@ -221,6 +381,28 @@ export const repository = {
     return isSupabaseConfigured ? deleteProductSupabase(id) : deleteProductDexie(id)
   },
 
+  // Clientes
+  listClients(): Promise<Client[]> {
+    return isSupabaseConfigured ? listClientsSupabase() : listClientsDexie()
+  },
+
+  getClient(id: string): Promise<Client | undefined> {
+    return isSupabaseConfigured ? getClientSupabase(id) : getClientDexie(id)
+  },
+
+  createClient(input: ClientInput): Promise<Client> {
+    return isSupabaseConfigured ? createClientSupabase(input) : createClientDexie(input)
+  },
+
+  updateClient(id: string, input: ClientInput): Promise<Client> {
+    return isSupabaseConfigured ? updateClientSupabase(id, input) : updateClientDexie(id, input)
+  },
+
+  deleteClient(id: string): Promise<void> {
+    return isSupabaseConfigured ? deleteClientSupabase(id) : deleteClientDexie(id)
+  },
+
+  // Vendas
   listSales(): Promise<Sale[]> {
     return isSupabaseConfigured ? listSalesSupabase() : listSalesDexie()
   },

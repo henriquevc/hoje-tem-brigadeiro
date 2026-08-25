@@ -2,11 +2,12 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { repository } from '@/lib/repository'
 import { isSupabaseConfigured } from '@/lib/supabase'
-import type { Product, ProductInput, Sale, SaleInput } from '@/types'
+import type { Client, ClientInput, Product, ProductInput, Sale, SaleInput } from '@/types'
 
 export const useBrigadeiroStore = defineStore('brigadeiro', () => {
   const products = ref<Product[]>([])
   const sales = ref<Sale[]>([])
+  const clients = ref<Client[]>([])
   const loading = ref(false)
   const initialized = ref(false)
   const error = ref<string | null>(null)
@@ -29,9 +30,14 @@ export const useBrigadeiroStore = defineStore('brigadeiro', () => {
   }
 
   async function refresh() {
-    const [p, s] = await Promise.all([repository.listProducts(), repository.listSales()])
+    const [p, s, c] = await Promise.all([
+      repository.listProducts(),
+      repository.listSales(),
+      repository.listClients(),
+    ])
     products.value = p
     sales.value = s
+    clients.value = c
   }
 
   async function addProduct(input: ProductInput) {
@@ -46,6 +52,23 @@ export const useBrigadeiroStore = defineStore('brigadeiro', () => {
 
   async function removeProduct(id: string) {
     await repository.deleteProduct(id)
+    await refresh()
+  }
+
+  async function addClient(input: ClientInput) {
+    const created = await repository.createClient(input)
+    await refresh()
+    return created
+  }
+
+  async function updateClient(id: string, input: ClientInput) {
+    const updated = await repository.updateClient(id, input)
+    await refresh()
+    return updated
+  }
+
+  async function removeClient(id: string) {
+    await repository.deleteClient(id)
     await refresh()
   }
 
@@ -67,6 +90,7 @@ export const useBrigadeiroStore = defineStore('brigadeiro', () => {
   return {
     products,
     sales,
+    clients,
     loading,
     initialized,
     error,
@@ -76,6 +100,9 @@ export const useBrigadeiroStore = defineStore('brigadeiro', () => {
     addProduct,
     updateProduct,
     removeProduct,
+    addClient,
+    updateClient,
+    removeClient,
     addSale,
     updateSale,
     removeSale,

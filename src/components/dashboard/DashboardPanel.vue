@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
+import { toRef } from 'vue'
 import { Calendar, Package, TrendingUp, Wallet } from '@lucide/vue'
-import CupcakeIcon from '@/components/icons/CupcakeIcon.vue'
 import BarChart from '@/components/charts/BarChart.vue'
-import DoughnutChart from '@/components/charts/DoughnutChart.vue'
 import StatCard from '@/components/dashboard/StatCard.vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDashboard } from '@/composables/useDashboard'
@@ -11,12 +9,7 @@ import { formatCurrency } from '@/lib/utils'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
 
 const store = useBrigadeiroStore()
-const { stats, topProducts, productsByDayOfWeek } = useDashboard(toRef(store, 'sales'))
-
-const topChart = computed(() => ({
-  labels: topProducts.value.map((p) => p.produto_nome),
-  data: topProducts.value.map((p) => p.quantidade),
-}))
+const { stats, productsByDayOfWeek } = useDashboard(toRef(store, 'sales'))
 </script>
 
 <template>

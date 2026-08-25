@@ -1,3 +1,17 @@
+export interface Client {
+  id: string
+  nome: string
+  apartamento: string
+  ativo: boolean
+  created_at: string
+}
+
+export interface ClientInput {
+  nome: string
+  apartamento: string
+  ativo?: boolean
+}
+
 export interface Product {
   id: string
   nome: string
@@ -13,6 +27,8 @@ export interface Sale {
   quantidade: number
   produto_id: string
   produto_nome: string
+  cliente_id?: string | null
+  cliente_nome?: string | null
   valor_venda: number
   preco_custo: number
   lucro: number
@@ -23,6 +39,7 @@ export interface SaleInput {
   data: string
   quantidade: number
   produto_id: string
+  cliente_id?: string | null
 }
 
 export interface ProductInput {

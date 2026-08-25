@@ -57,6 +57,7 @@ async function confirmDelete() {
         <TableHead class="text-primary-foreground">Data</TableHead>
         <TableHead class="text-primary-foreground">Qtde</TableHead>
         <TableHead class="text-primary-foreground">Produto</TableHead>
+        <TableHead class="text-primary-foreground">Cliente</TableHead>
         <TableHead class="text-right text-primary-foreground">Valor venda</TableHead>
         <TableHead class="text-right text-primary-foreground">Preço custo</TableHead>
         <TableHead class="text-right text-primary-foreground">Lucro</TableHead>
@@ -65,7 +66,7 @@ async function confirmDelete() {
     </TableHeader>
     <TableBody>
       <TableRow v-if="sales.length === 0">
-        <TableCell colspan="7" class="h-24 text-center text-muted-foreground">
+        <TableCell colspan="8" class="h-24 text-center text-muted-foreground">
           Nenhuma venda registrada. Clique em "Nova venda" para começar.
         </TableCell>
       </TableRow>
@@ -73,6 +74,11 @@ async function confirmDelete() {
         <TableCell>{{ formatDate(sale.data) }}</TableCell>
         <TableCell>{{ sale.quantidade }}</TableCell>
         <TableCell class="font-medium">{{ sale.produto_nome }}</TableCell>
+        <TableCell>
+          <span :class="sale.cliente_nome ? 'font-medium text-foreground' : 'text-muted-foreground'">
+            {{ sale.cliente_nome || '—' }}
+          </span>
+        </TableCell>
         <TableCell class="text-right">{{ formatCurrency(sale.valor_venda) }}</TableCell>
         <TableCell class="text-right text-muted-foreground">
           {{ formatCurrency(sale.preco_custo) }}

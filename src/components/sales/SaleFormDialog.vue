@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { format } from 'date-fns'
+import ClientFormDialog from '@/components/clients/ClientFormDialog.vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,8 +23,8 @@ import {
 } from '@/components/ui/select'
 import { formatCurrency } from '@/lib/utils'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
-import type { Sale } from '@/types'
-import { Loader2, Pencil, Plus } from '@lucide/vue'
+import type { Client, Sale } from '@/types'
+import { Loader2, Pencil, Plus, UserPlus } from '@lucide/vue'
 
 const props = defineProps<{
   sale?: Sale
@@ -32,9 +33,12 @@ const props = defineProps<{
 const store = useBrigadeiroStore()
 const open = ref(false)
 const saving = ref(false)
+const showNewClientDialog = ref(false)
+
 const data = ref(format(new Date(), 'yyyy-MM-dd'))
 const quantidade = ref(1)
 const produtoId = ref('')
+const clienteId = ref('none')
 
 const isEdit = () => Boolean(props.sale)
 
@@ -44,6 +48,17 @@ const productOptions = computed(() => {
 
   const current = store.products.find((p) => p.id === props.sale!.produto_id)
   if (current && !active.some((p) => p.id === current.id)) {
+    return [...active, current]
+  }
+  return active
+})
+
+const clientOptions = computed(() => {
+  const active = store.clients.filter((c) => c.ativo)
+  if (!props.sale || !props.sale.cliente_id) return active
+
+  const current = store.clients.find((c) => c.id === props.sale!.cliente_id)
+  if (current && !active.some((c) => c.id === current.id)) {
     return [...active, current]
   }
   return active
@@ -65,12 +80,18 @@ watch(open, (isOpen) => {
     data.value = props.sale.data
     quantidade.value = props.sale.quantidade
     produtoId.value = props.sale.produto_id
+    clienteId.value = props.sale.cliente_id || 'none'
   } else {
     data.value = format(new Date(), 'yyyy-MM-dd')
     quantidade.value = 1
     produtoId.value = productOptions.value[0]?.id ?? ''
+    clienteId.value = 'none'
   }
 })
+
+function onClientSaved(created: Client) {
+  clienteId.value = created.id
+}
 
 async function submit() {
   if (!produtoId.value || quantidade.value < 1 || saving.value) return
@@ -81,6 +102,7 @@ async function submit() {
       data: data.value,
       quantidade: quantidade.value,
       produto_id: produtoId.value,
+      cliente_id: clienteId.value && clienteId.value !== 'none' ? clienteId.value : null,
     }
     if (props.sale) {
       await store.updateSale(props.sale.id, input)
@@ -117,6 +139,40 @@ async function submit() {
         <div class="grid gap-2">
           <Label for="data">Data</Label>
           <Input id="data" v-model="data" type="date" required :disabled="saving" />
+        </div>
+
+        <div class="grid gap-2">
+          <div class="flex items-center justify-between">
+            <Label>Cliente (opcional)</Label>
+            <Button
+              variant="link"
+              type="button"
+              size="sm"
+              class="h-auto p-0 text-xs font-normal text-primary hover:underline"
+              :disabled="saving"
+              @click="showNewClientDialog = true"
+            >
+              <UserPlus class="mr-1 size-3" />
+              Novo cliente
+            </Button>
+          </div>
+          <Select v-model="clienteId" :disabled="saving">
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um cliente (opcional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">
+                <span class="text-muted-foreground">Venda avulsa (sem cliente)</span>
+              </SelectItem>
+              <SelectItem
+                v-for="c in clientOptions"
+                :key="c.id"
+                :value="c.id"
+              >
+                {{ c.nome }} {{ c.apartamento }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div class="grid gap-2">
@@ -192,4 +248,12 @@ async function submit() {
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <!-- Modal rápido de criação de cliente -->
+  <ClientFormDialog
+    v-model:open="showNewClientDialog"
+    hide-trigger
+    @saved="onClientSaved"
+  />
 </template>
+
