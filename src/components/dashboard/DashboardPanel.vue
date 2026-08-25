@@ -11,23 +11,7 @@ import { formatCurrency } from '@/lib/utils'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
 
 const store = useBrigadeiroStore()
-const { stats, topProducts, salesByDayInMonth } = useDashboard(toRef(store, 'sales'))
-
-const monthChart = computed(() => ({
-  labels: salesByDayInMonth.value.map((d) => d.label),
-  datasets: [
-    {
-      label: 'Receita',
-      data: salesByDayInMonth.value.map((d) => d.receita),
-      backgroundColor: 'oklch(0.45 0.09 52 / 0.88)',
-    },
-    {
-      label: 'Lucro',
-      data: salesByDayInMonth.value.map((d) => d.lucro),
-      backgroundColor: 'oklch(0.78 0.09 355 / 0.88)',
-    },
-  ],
-}))
+const { stats, topProducts, productsByDayOfWeek } = useDashboard(toRef(store, 'sales'))
 
 const topChart = computed(() => ({
   labels: topProducts.value.map((p) => p.produto_nome),
@@ -37,73 +21,49 @@ const topChart = computed(() => ({
 
 <template>
   <section class="space-y-6">
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <StatCard
         title="Vendas hoje"
-        :value="String(stats.vendasHoje)"
-        :subtitle="`${formatCurrency(stats.receitaHoje)} · lucro ${formatCurrency(stats.lucroHoje)}`"
+        :value="formatCurrency(stats.lucroHoje)"
+        :subtitle="`Total vendas: ${formatCurrency(stats.receitaHoje)}`"
         :icon="Calendar"
-        accent="revenue"
+        accent="profit"
       />
       <StatCard
-        title="Vendas no mês"
-        :value="String(stats.vendasMes)"
-        :subtitle="`${formatCurrency(stats.receitaMes)} · lucro ${formatCurrency(stats.lucroMes)}`"
+        title="Mês atual"
+        :value="`${formatCurrency(stats.lucroMes)}`"
+        :subtitle="`Total vendas: ${formatCurrency(stats.receitaMes)}`"
         :icon="TrendingUp"
         accent="profit"
       />
       <StatCard
-        title="Total geral"
-        :value="String(stats.vendasTotal)"
-        :subtitle="`${formatCurrency(stats.receitaTotal)} desde o início`"
-        :icon="Package"
-      />
-      <StatCard
-        title="Lucro total"
+        title="Desde o início"
         :value="formatCurrency(stats.lucroTotal)"
-        subtitle="Soma de todas as vendas"
+        :subtitle="`Total vendas: ${formatCurrency(stats.receitaTotal)}`"
         :icon="Wallet"
         accent="profit"
       />
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-2">
+    <div class="grid gap-4 lg:grid-cols-1">
       <Card>
         <CardHeader>
           <CardTitle class="flex items-center gap-2 text-lg">
-            <TrendingUp class="size-5 text-primary" />
-            Receita e lucro no mês
+            <Package class="size-5 text-primary" />
+            Mais vendidos por dia da semana
           </CardTitle>
-          <CardDescription>Totalizador mensal por dia</CardDescription>
+          <CardDescription>Quantidade acumulada nos últimos 30 dias (Seg a Dom)</CardDescription>
         </CardHeader>
         <CardContent>
           <BarChart
-            v-if="monthChart.labels.length"
-            :labels="monthChart.labels"
-            :datasets="monthChart.datasets"
+            v-if="productsByDayOfWeek.hasSales"
+            :labels="productsByDayOfWeek.labels"
+            :datasets="productsByDayOfWeek.datasets"
+            value-type="number"
+            :stacked="true"
           />
           <p v-else class="py-12 text-center text-sm text-muted-foreground">
-            Sem vendas neste mês ainda.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle class="flex items-center gap-2 text-lg">
-            <CupcakeIcon class="size-5 text-primary" />
-            Mais vendidos
-          </CardTitle>
-          <CardDescription>Ranking por quantidade</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DoughnutChart
-            v-if="topChart.data.length"
-            :labels="topChart.labels"
-            :data="topChart.data"
-          />
-          <p v-else class="py-12 text-center text-sm text-muted-foreground">
-            Cadastre vendas para ver o ranking.
+            Sem vendas registradas nos últimos 30 dias.
           </p>
         </CardContent>
       </Card>

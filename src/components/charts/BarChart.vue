@@ -13,15 +13,25 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-const props = defineProps<{
-  labels: string[]
-  datasets: {
-    label: string
-    data: number[]
-    backgroundColor?: string
-  }[]
-  title?: string
-}>()
+interface DatasetItem {
+  label: string
+  data: number[]
+  backgroundColor?: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    labels: string[]
+    datasets: DatasetItem[]
+    title?: string
+    valueType?: 'currency' | 'number'
+    stacked?: boolean
+  }>(),
+  {
+    valueType: 'currency',
+    stacked: false,
+  },
+)
 
 const chartData = computed(() => ({
   labels: props.labels,
@@ -32,7 +42,7 @@ const chartData = computed(() => ({
   })),
 }))
 
-const options = {
+const options = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -41,19 +51,45 @@ const options = {
       display: Boolean(props.title),
       text: props.title,
     },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        callback: (value: string | number) =>
-          new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-            Number(value),
-          ),
+    tooltip: {
+      callbacks: {
+        label: (context: any) => {
+          const label = context.dataset.label || ''
+          const val = context.parsed.y ?? context.raw ?? 0
+          if (props.valueType === 'number') {
+            return ` ${label}: ${val} un`
+          }
+          return ` ${label}: ${new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }).format(Number(val))}`
+        },
       },
     },
   },
-}
+  scales: {
+    x: {
+      stacked: props.stacked,
+      grid: { display: false },
+    },
+    y: {
+      stacked: props.stacked,
+      beginAtZero: true,
+      ticks: {
+        precision: props.valueType === 'number' ? 0 : undefined,
+        callback: (value: string | number) => {
+          if (props.valueType === 'number') {
+            return `${value} un`
+          }
+          return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }).format(Number(value))
+        },
+      },
+    },
+  },
+}))
 </script>
 
 <template>
@@ -61,3 +97,4 @@ const options = {
     <Bar :data="chartData" :options="options" />
   </div>
 </template>
+

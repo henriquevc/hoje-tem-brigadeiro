@@ -1,11 +1,15 @@
 import { computed, type Ref } from 'vue'
 import {
+  endOfDay,
   endOfMonth,
   format,
+  getDay,
   isSameDay,
   isSameMonth,
   parseISO,
+  startOfDay,
   startOfMonth,
+  subDays,
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import type { DashboardStats, Sale, TopProduct } from '@/types'
@@ -17,6 +21,26 @@ function saleDate(sale: Sale): Date {
 function receita(sale: Sale): number {
   return sale.valor_venda * sale.quantidade
 }
+
+const DAYS_OF_WEEK = [
+  { dayIndex: 1, label: 'Segunda' },
+  { dayIndex: 2, label: 'Terça' },
+  { dayIndex: 3, label: 'Quarta' },
+  { dayIndex: 4, label: 'Quinta' },
+  { dayIndex: 5, label: 'Sexta' },
+  { dayIndex: 6, label: 'Sábado' },
+  { dayIndex: 0, label: 'Domingo' },
+]
+
+const PALETTE = [
+  'oklch(0.50 0.12 52)',
+  'oklch(0.75 0.14 355)',
+  'oklch(0.68 0.15 75)',
+  'oklch(0.62 0.14 150)',
+  'oklch(0.58 0.16 280)',
+  'oklch(0.65 0.18 30)',
+  'oklch(0.55 0.15 200)',
+]
 
 export function useDashboard(sales: Ref<Sale[]>) {
   const today = computed(() => new Date())
@@ -88,6 +112,65 @@ export function useDashboard(sales: Ref<Sale[]>) {
     return [...map.values()].sort((a, b) => b.quantidade - a.quantidade).slice(0, 5)
   })
 
+  const productsByDayOfWeek = computed(() => {
+    const labels = DAYS_OF_WEEK.map((d) => d.label)
+    const now = today.value
+    const cutoffDate = startOfDay(subDays(now, 30))
+    const endToday = endOfDay(now)
+
+    // Filtra somente as vendas ocorridas nos últimos 30 dias
+    const salesInPeriod = sales.value.filter((sale) => {
+      const d = saleDate(sale)
+      return d >= cutoffDate && d <= endToday
+    })
+
+    // Agrupa o total do período por produto para ordenar os mais vendidos
+    const productMap = new Map<string, { id: string; nome: string; total: number }>()
+
+    for (const sale of salesInPeriod) {
+      const existing = productMap.get(sale.produto_id) || {
+        id: sale.produto_id,
+        nome: sale.produto_nome,
+        total: 0,
+      }
+      existing.total += sale.quantidade
+      productMap.set(sale.produto_id, existing)
+    }
+    const topList = [...productMap.values()]
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 7)
+
+    const datasets = topList.map((prod, index) => {
+      const data = DAYS_OF_WEEK.map(({ dayIndex }) => {
+        let sum = 0
+        for (const sale of salesInPeriod) {
+          if (sale.produto_id === prod.id) {
+            const d = saleDate(sale)
+            if (getDay(d) === dayIndex) {
+              sum += sale.quantidade
+            }
+          }
+        }
+        return sum
+      })
+
+      return {
+        label: prod.nome,
+        data,
+        backgroundColor: PALETTE[index % PALETTE.length],
+      }
+    })
+
+    const hasSales = salesInPeriod.length > 0 && datasets.some((ds) => ds.data.some((qty) => qty > 0))
+
+    return {
+      labels,
+      datasets,
+      hasSales,
+    }
+  })
+
+
   const salesByDayInMonth = computed(() => {
     const now = today.value
     const start = startOfMonth(now)
@@ -116,5 +199,6 @@ export function useDashboard(sales: Ref<Sale[]>) {
     return days
   })
 
-  return { stats, topProducts, salesByDayInMonth }
+  return { stats, topProducts, productsByDayOfWeek, salesByDayInMonth }
 }
+
