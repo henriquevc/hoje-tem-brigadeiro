@@ -201,41 +201,6 @@ const links = [
             </div>
           </RouterLink>
         </div>
-
-        <!-- Atalho Rápido para a tela de Cardápio WhatsApp e Informações -->
-        <div class="flex items-center gap-2">
-          <RouterLink
-            to="/cardapio"
-            class="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all border"
-            :class="
-              route.path === '/cardapio'
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
-            "
-          >
-            <ImageIcon class="size-3.5 text-amber-600 dark:text-amber-400" />
-            <span class="hidden sm:inline">Montar Cardápio</span>
-            <span class="sm:hidden">Cardápio</span>
-            <span class="text-[9px] bg-amber-500 text-white dark:text-stone-900 font-bold px-1.5 py-0.2 rounded-full">HD</span>
-          </RouterLink>
-
-          <Badge variant="secondary" class="hidden md:inline-flex text-xs">
-            {{ store.storageMode === 'supabase' ? 'Supabase' : 'IndexedDB' }}
-          </Badge>
-
-          <Button
-            v-if="auth.isRequired"
-            variant="ghost"
-            size="icon"
-            class="size-8 text-muted-foreground hover:text-foreground"
-            title="Sair"
-            @click="logout"
-          >
-            <LogOut class="size-4" />
-            <span class="sr-only">Sair</span>
-          </Button>
-        </div>
-
       </div>
     </header>
 
