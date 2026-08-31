@@ -92,3 +92,39 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+/* Typography styles for Cardapio Templates */
+.font-cursive {
+  font-family: 'Great Vibes', 'Dancing Script', cursive;
+}
+.font-dancing {
+  font-family: 'Dancing Script', cursive;
+}
+.font-caveat {
+  font-family: 'Caveat', cursive;
+}
+.font-serif-luxury {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+.font-sans-card {
+  font-family: 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Subtle textures and shadows for templates */
+.cardapio-kraft-bg {
+  background-color: #f3e9dc;
+  background-image: 
+    radial-gradient(#d3be9e 0.75px, transparent 0.75px),
+    radial-gradient(#d3be9e 0.75px, #f3e9dc 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+.subtle-grain {
+  background-image: radial-gradient(rgba(0,0,0,0.05) 1px, transparent 0);
+  background-size: 16px 16px;
+}
+
