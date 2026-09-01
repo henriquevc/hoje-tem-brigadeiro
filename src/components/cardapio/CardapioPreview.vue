@@ -48,20 +48,53 @@ const currentTemplateComponent = computed(() => {
   }
 })
 
-// Dimensões do cartão de acordo com o formato escolhido
+// Dimensões do cartão de acordo com o formato escolhido e quantidade de produtos
 const cardDimensionsStyle = computed(() => {
+  const count = store.items.length
+
   if (store.format === 'story') {
+    if (count >= 7) {
+      return {
+        width: '100%',
+        maxWidth: '460px',
+        minHeight: '1180px',
+      }
+    }
+    if (count >= 5) {
+      return {
+        width: '100%',
+        maxWidth: '440px',
+        minHeight: '960px',
+      }
+    }
     return {
       width: '100%',
-      maxWidth: '430px',
-      minHeight: '764px',
+      maxWidth: '440px',
+      minHeight: '780px',
       aspectRatio: '9 / 16',
     }
   }
+
+  // Formato Feed / WhatsApp
+  if (count >= 7) {
+    return {
+      width: '100%',
+      maxWidth: '580px',
+      minHeight: '1220px',
+    }
+  }
+  if (count >= 5) {
+    return {
+      width: '100%',
+      maxWidth: '580px',
+      minHeight: '960px',
+    }
+  }
+
   return {
     width: '100%',
-    maxWidth: '560px',
-    minHeight: '700px',
+    maxWidth: '580px',
+    minHeight: '725px',
     aspectRatio: '4 / 5',
   }
 })
