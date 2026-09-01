@@ -15,7 +15,7 @@ defineEmits<{
 
 <template>
   <div
-    class="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 sm:p-5 bg-[#2a171e] text-[#fce8ef] font-sans select-none rounded-[32px] border-4 border-[#e5a4b7]/50 shadow-2xl subtle-grain"
+    class="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 sm:p-5 bg-[#2a171e] text-[#fce8ef] font-sans select-none border-4 border-[#e5a4b7]/50 shadow-2xl subtle-grain"
     style="min-height: 100%; box-sizing: border-box;"
   >
     <!-- Brilho e Moldura Romântica -->

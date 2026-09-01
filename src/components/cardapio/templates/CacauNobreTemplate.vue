@@ -15,7 +15,7 @@ defineEmits<{
 
 <template>
   <div
-    class="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 sm:p-5 bg-[#2e160c] text-white font-sans select-none rounded-[28px] border-[3px] border-[#d8b888]/80 shadow-2xl"
+    class="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 sm:p-5 bg-[#2e160c] text-white font-sans select-none border-[3px] border-[#d8b888]/80 shadow-2xl"
     style="min-height: 100%; box-sizing: border-box;"
   >
     <!-- Moldura interna fina dourada -->

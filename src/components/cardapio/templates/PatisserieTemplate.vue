@@ -15,7 +15,7 @@ defineEmits<{
 
 <template>
   <div
-    class="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 sm:p-5 bg-[#fdfbf7] text-[#2c2420] font-sans select-none rounded-[32px] border-[3px] border-[#e4dacf] shadow-xl"
+    class="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 sm:p-5 bg-[#fdfbf7] text-[#2c2420] font-sans select-none border-[3px] border-[#e4dacf] shadow-xl"
     style="min-height: 100%; box-sizing: border-box;"
   >
     <!-- Moldura e detalhes minimalistas -->
