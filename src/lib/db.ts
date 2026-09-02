@@ -17,6 +17,11 @@ export class BrigadeiroDB extends Dexie {
       sales: 'id, data, produto_id, cliente_id, created_at',
       clients: 'id, nome, apartamento, ativo, created_at',
     })
+    this.version(4).stores({
+      products: 'id, nome, created_at',
+      sales: 'id, data, cliente_id, created_at', // itens é array, então não precisa de índice, e produto_id agora é menos relevante para busca
+      clients: 'id, nome, apartamento, ativo, created_at',
+    })
   }
 }
 

@@ -6,8 +6,101 @@ function newId(): string {
   return crypto.randomUUID()
 }
 
-function calcLucro(quantidade: number, valorVenda: number, precoCusto: number): number {
-  return (valorVenda - precoCusto) * quantidade
+export function normalizeSale(raw: any): Sale {
+  let itens = []
+  if (raw.itens && Array.isArray(raw.itens) && raw.itens.length > 0) {
+    itens = raw.itens.map((it: any) => ({
+      produto_id: it.produto_id,
+      produto_nome: it.produto_nome,
+      quantidade: Number(it.quantidade),
+      valor_venda: Number(it.valor_venda),
+      preco_custo: Number(it.preco_custo),
+      subtotal: Number(it.subtotal ?? (Number(it.valor_venda) * Number(it.quantidade))),
+      lucro: Number(it.lucro ?? ((Number(it.valor_venda) - Number(it.preco_custo)) * Number(it.quantidade)))
+    }))
+  } else {
+    const q = Number(raw.quantidade)
+    const vv = Number(raw.valor_venda)
+    const pc = Number(raw.preco_custo)
+    itens = [{
+      produto_id: raw.produto_id,
+      produto_nome: raw.produto_nome,
+      quantidade: q,
+      valor_venda: vv,
+      preco_custo: pc,
+      subtotal: vv * q,
+      lucro: Number(raw.lucro)
+    }]
+  }
+
+  const quantidade = itens.reduce((acc: number, it: any) => acc + it.quantidade, 0)
+  const valor_venda = itens.reduce((acc: number, it: any) => acc + it.subtotal, 0)
+  const preco_custo = itens.reduce((acc: number, it: any) => acc + (it.preco_custo * it.quantidade), 0)
+  const lucro = itens.reduce((acc: number, it: any) => acc + it.lucro, 0)
+  
+  const produto_nome = itens.length === 1 
+    ? itens[0].produto_nome 
+    : `${itens[0].produto_nome} (+${itens.length - 1} ${itens.length - 1 === 1 ? 'outro' : 'outros'})`
+
+  return {
+    ...raw,
+    quantidade,
+    valor_venda,
+    preco_custo,
+    lucro,
+    itens,
+    produto_nome
+  }
+}
+
+async function buildSalePayload(input: SaleInput, getProductFn: (id: string) => Promise<Product | undefined>, getClientFn: (id: string) => Promise<Client | undefined>) {
+  const rawItens = input.itens?.length > 0 ? input.itens : (input.produto_id && input.quantidade ? [{ produto_id: input.produto_id, quantidade: input.quantidade }] : [])
+  if (rawItens.length === 0) throw new Error('A venda precisa ter pelo menos um item')
+
+  const itens = []
+  for (const it of rawItens) {
+    const product = await getProductFn(it.produto_id)
+    if (!product) throw new Error(`Produto não encontrado: ${it.produto_id}`)
+    itens.push({
+      produto_id: product.id,
+      produto_nome: product.nome,
+      quantidade: it.quantidade,
+      valor_venda: product.valor_venda,
+      preco_custo: product.preco_custo,
+      subtotal: product.valor_venda * it.quantidade,
+      lucro: (product.valor_venda - product.preco_custo) * it.quantidade
+    })
+  }
+
+  let cliente_id: string | null = null
+  let cliente_nome: string | null = null
+  if (input.cliente_id) {
+    const client = await getClientFn(input.cliente_id)
+    if (client) {
+      cliente_id = client.id
+      cliente_nome = `${client.nome} ${client.apartamento}`
+    }
+  }
+
+  const quantidade = itens.reduce((sum: number, it: any) => sum + it.quantidade, 0)
+  const valor_venda = itens.reduce((sum: number, it: any) => sum + it.subtotal, 0)
+  const preco_custo = itens.reduce((sum: number, it: any) => sum + (it.preco_custo * it.quantidade), 0)
+  const lucro = itens.reduce((sum: number, it: any) => sum + it.lucro, 0)
+  const produto_id = itens[0].produto_id
+  const produto_nome = itens.length === 1 ? itens[0].produto_nome : `${itens[0].produto_nome} (+${itens.length - 1} ${itens.length - 1 === 1 ? 'outro' : 'outros'})`
+
+  return {
+    data: input.data,
+    quantidade,
+    produto_id,
+    produto_nome,
+    cliente_id,
+    cliente_nome,
+    valor_venda,
+    preco_custo,
+    lucro,
+    itens
+  }
 }
 
 const SEED_PRODUCTS: ProductInput[] = [
@@ -211,139 +304,52 @@ async function deleteClientSupabase(id: string): Promise<void> {
 // ==========================================
 
 async function listSalesDexie(): Promise<Sale[]> {
-  return db.sales.orderBy('data').reverse().toArray()
+  const data = await db.sales.orderBy('data').reverse().toArray()
+  return data.map(normalizeSale)
 }
 
 async function listSalesSupabase(): Promise<Sale[]> {
   const { data, error } = await supabase!.from('sales').select('*').order('data', { ascending: false })
   if (error) throw error
-  return data as Sale[]
+  return (data as any[]).map(normalizeSale)
 }
 
 async function createSaleDexie(input: SaleInput): Promise<Sale> {
-  const product = await getProductDexie(input.produto_id)
-  if (!product) throw new Error('Produto não encontrado')
-
-  let cliente_id: string | null = null
-  let cliente_nome: string | null = null
-  if (input.cliente_id) {
-    const client = await getClientDexie(input.cliente_id)
-    if (client) {
-      cliente_id = client.id
-      cliente_nome = `${client.nome} ${client.apartamento}`
-    }
-  }
-
+  const payload = await buildSalePayload(input, getProductDexie, getClientDexie)
   const sale: Sale = {
     id: newId(),
-    data: input.data,
-    quantidade: input.quantidade,
-    produto_id: product.id,
-    produto_nome: product.nome,
-    cliente_id,
-    cliente_nome,
-    valor_venda: product.valor_venda,
-    preco_custo: product.preco_custo,
-    lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
+    ...payload,
     created_at: new Date().toISOString(),
   }
   await db.sales.add(sale)
-  return sale
+  return normalizeSale(sale)
 }
 
 async function createSaleSupabase(input: SaleInput): Promise<Sale> {
-  const product = await getProductSupabase(input.produto_id)
-  if (!product) throw new Error('Produto não encontrado')
-
-  let cliente_id: string | null = null
-  let cliente_nome: string | null = null
-  if (input.cliente_id) {
-    const client = await getClientSupabase(input.cliente_id)
-    if (client) {
-      cliente_id = client.id
-      cliente_nome = `${client.nome} ${client.apartamento}`
-    }
-  }
-
-  const row = {
-    data: input.data,
-    quantidade: input.quantidade,
-    produto_id: product.id,
-    produto_nome: product.nome,
-    cliente_id,
-    cliente_nome,
-    valor_venda: product.valor_venda,
-    preco_custo: product.preco_custo,
-    lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
-  }
-
-  const { data, error } = await supabase!.from('sales').insert(row).select().single()
+  const payload = await buildSalePayload(input, getProductSupabase, getClientSupabase)
+  const { data, error } = await supabase!.from('sales').insert(payload).select().single()
   if (error) throw error
-  return data as Sale
+  return normalizeSale(data)
 }
 
 async function updateSaleDexie(id: string, input: SaleInput): Promise<Sale> {
   const existing = await db.sales.get(id)
   if (!existing) throw new Error('Venda não encontrada')
 
-  const product = await getProductDexie(input.produto_id)
-  if (!product) throw new Error('Produto não encontrado')
-
-  let cliente_id: string | null = null
-  let cliente_nome: string | null = null
-  if (input.cliente_id) {
-    const client = await getClientDexie(input.cliente_id)
-    if (client) {
-      cliente_id = client.id
-      cliente_nome = `${client.nome} ${client.apartamento}`
-    }
-  }
-
+  const payload = await buildSalePayload(input, getProductDexie, getClientDexie)
   const updated: Sale = {
     ...existing,
-    data: input.data,
-    quantidade: input.quantidade,
-    produto_id: product.id,
-    produto_nome: product.nome,
-    cliente_id,
-    cliente_nome,
-    valor_venda: product.valor_venda,
-    preco_custo: product.preco_custo,
-    lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
+    ...payload,
   }
   await db.sales.put(updated)
-  return updated
+  return normalizeSale(updated)
 }
 
 async function updateSaleSupabase(id: string, input: SaleInput): Promise<Sale> {
-  const product = await getProductSupabase(input.produto_id)
-  if (!product) throw new Error('Produto não encontrado')
-
-  let cliente_id: string | null = null
-  let cliente_nome: string | null = null
-  if (input.cliente_id) {
-    const client = await getClientSupabase(input.cliente_id)
-    if (client) {
-      cliente_id = client.id
-      cliente_nome = `${client.nome} ${client.apartamento}`
-    }
-  }
-
-  const row = {
-    data: input.data,
-    quantidade: input.quantidade,
-    produto_id: product.id,
-    produto_nome: product.nome,
-    cliente_id,
-    cliente_nome,
-    valor_venda: product.valor_venda,
-    preco_custo: product.preco_custo,
-    lucro: calcLucro(input.quantidade, product.valor_venda, product.preco_custo),
-  }
-
-  const { data, error } = await supabase!.from('sales').update(row).eq('id', id).select().single()
+  const payload = await buildSalePayload(input, getProductSupabase, getClientSupabase)
+  const { data, error } = await supabase!.from('sales').update(payload).eq('id', id).select().single()
   if (error) throw error
-  return data as Sale
+  return normalizeSale(data)
 }
 
 async function deleteSaleDexie(id: string): Promise<void> {

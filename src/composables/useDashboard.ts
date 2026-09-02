@@ -19,7 +19,7 @@ function saleDate(sale: Sale): Date {
 }
 
 function receita(sale: Sale): number {
-  return sale.valor_venda * sale.quantidade
+  return sale.valor_venda
 }
 
 const DAYS_OF_WEEK = [
@@ -94,18 +94,20 @@ export function useDashboard(sales: Ref<Sale[]>) {
     const map = new Map<string, TopProduct>()
 
     for (const sale of sales.value) {
-      const existing = map.get(sale.produto_id)
-      const r = receita(sale)
-      if (existing) {
-        existing.quantidade += sale.quantidade
-        existing.receita += r
-      } else {
-        map.set(sale.produto_id, {
-          produto_id: sale.produto_id,
-          produto_nome: sale.produto_nome,
-          quantidade: sale.quantidade,
-          receita: r,
-        })
+      if (!sale.itens) continue
+      for (const item of sale.itens) {
+        const existing = map.get(item.produto_id)
+        if (existing) {
+          existing.quantidade += item.quantidade
+          existing.receita += item.subtotal
+        } else {
+          map.set(item.produto_id, {
+            produto_id: item.produto_id,
+            produto_nome: item.produto_nome,
+            quantidade: item.quantidade,
+            receita: item.subtotal,
+          })
+        }
       }
     }
 
@@ -128,13 +130,16 @@ export function useDashboard(sales: Ref<Sale[]>) {
     const productMap = new Map<string, { id: string; nome: string; total: number }>()
 
     for (const sale of salesInPeriod) {
-      const existing = productMap.get(sale.produto_id) || {
-        id: sale.produto_id,
-        nome: sale.produto_nome,
-        total: 0,
+      if (!sale.itens) continue
+      for (const item of sale.itens) {
+        const existing = productMap.get(item.produto_id) || {
+          id: item.produto_id,
+          nome: item.produto_nome,
+          total: 0,
+        }
+        existing.total += item.quantidade
+        productMap.set(item.produto_id, existing)
       }
-      existing.total += sale.quantidade
-      productMap.set(sale.produto_id, existing)
     }
     const topList = [...productMap.values()]
       .sort((a, b) => b.total - a.total)
@@ -144,10 +149,13 @@ export function useDashboard(sales: Ref<Sale[]>) {
       const data = DAYS_OF_WEEK.map(({ dayIndex }) => {
         let sum = 0
         for (const sale of salesInPeriod) {
-          if (sale.produto_id === prod.id) {
-            const d = saleDate(sale)
-            if (getDay(d) === dayIndex) {
-              sum += sale.quantidade
+          if (!sale.itens) continue
+          const d = saleDate(sale)
+          if (getDay(d) === dayIndex) {
+            for (const item of sale.itens) {
+              if (item.produto_id === prod.id) {
+                sum += item.quantidade
+              }
             }
           }
         }

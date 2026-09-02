@@ -21,13 +21,14 @@ create table if not exists sales (
   id uuid primary key default gen_random_uuid(),
   data date not null,
   quantidade integer not null check (quantidade > 0),
-  produto_id uuid not null references products(id) on delete restrict,
-  produto_nome text not null,
+  produto_id uuid references products(id) on delete restrict,
+  produto_nome text,
   cliente_id uuid references clients(id) on delete restrict,
   cliente_nome text,
   valor_venda numeric(10, 2) not null,
   preco_custo numeric(10, 2) not null,
   lucro numeric(10, 2) not null,
+  itens jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -35,6 +36,9 @@ create table if not exists sales (
 -- alter table products add column if not exists ativo boolean not null default true;
 -- alter table sales add column if not exists cliente_id uuid references clients(id) on delete restrict;
 -- alter table sales add column if not exists cliente_nome text;
+-- alter table sales add column if not exists itens jsonb;
+-- alter table sales alter column produto_id drop not null;
+-- alter table sales alter column produto_nome drop not null;
 
 create index if not exists sales_data_idx on sales (data desc);
 create index if not exists sales_cliente_idx on sales (cliente_id);

@@ -23,8 +23,8 @@ import {
 } from '@/components/ui/select'
 import { formatCurrency } from '@/lib/utils'
 import { useBrigadeiroStore } from '@/stores/brigadeiro'
-import type { Client, Sale } from '@/types'
-import { Loader2, Pencil, Plus, UserPlus } from '@lucide/vue'
+import type { Client, Sale, SaleItemInput } from '@/types'
+import { Loader2, Pencil, Plus, Trash2, UserPlus } from '@lucide/vue'
 
 const props = defineProps<{
   sale?: Sale
@@ -36,21 +36,26 @@ const saving = ref(false)
 const showNewClientDialog = ref(false)
 
 const data = ref(format(new Date(), 'yyyy-MM-dd'))
-const quantidade = ref(1)
-const produtoId = ref('')
 const clienteId = ref('none')
+
+const itens = ref<SaleItemInput[]>([])
 
 const isEdit = () => Boolean(props.sale)
 
+// Helper to keep track of products actually involved in this sale
+// so they still appear in dropdowns even if they became inactive
 const productOptions = computed(() => {
   const active = store.products.filter((p) => p.ativo)
-  if (!props.sale) return active
+  if (!props.sale || !props.sale.itens) return active
 
-  const current = store.products.find((p) => p.id === props.sale!.produto_id)
-  if (current && !active.some((p) => p.id === current.id)) {
-    return [...active, current]
+  const allOpts = [...active]
+  for (const item of props.sale.itens) {
+    if (!allOpts.some(p => p.id === item.produto_id)) {
+      const p = store.products.find(x => x.id === item.produto_id)
+      if (p) allOpts.push(p)
+    }
   }
-  return active
+  return allOpts
 })
 
 const clientOptions = computed(() => {
@@ -64,28 +69,53 @@ const clientOptions = computed(() => {
   return active
 })
 
-const selectedProduct = computed(() =>
-  store.products.find((p) => p.id === produtoId.value),
-)
+function addItem() {
+  const defaultProd = productOptions.value[0]?.id ?? ''
+  itens.value.push({ produto_id: defaultProd, quantidade: 1 })
+}
 
-const previewLucro = computed(() => {
-  const p = selectedProduct.value
-  if (!p) return 0
-  return (p.valor_venda - p.preco_custo) * quantidade.value
+function removeItem(index: number) {
+  itens.value.splice(index, 1)
+}
+
+// Totals calculation for the summary
+const totalQuantidade = computed(() => itens.value.reduce((sum, it) => sum + (it.quantidade || 0), 0))
+const totalVenda = computed(() => {
+  return itens.value.reduce((sum, it) => {
+    const p = store.products.find(x => x.id === it.produto_id)
+    return sum + (p ? p.valor_venda * (it.quantidade || 0) : 0)
+  }, 0)
+})
+const totalCusto = computed(() => {
+  return itens.value.reduce((sum, it) => {
+    const p = store.products.find(x => x.id === it.produto_id)
+    return sum + (p ? p.preco_custo * (it.quantidade || 0) : 0)
+  }, 0)
+})
+const totalLucro = computed(() => totalVenda.value - totalCusto.value)
+
+const isValid = computed(() => {
+  if (itens.value.length === 0) return false
+  return itens.value.every(it => it.produto_id && it.quantidade >= 1)
 })
 
 watch(open, (isOpen) => {
   if (!isOpen) return
   if (props.sale) {
     data.value = props.sale.data
-    quantidade.value = props.sale.quantidade
-    produtoId.value = props.sale.produto_id
     clienteId.value = props.sale.cliente_id || 'none'
+    if (props.sale.itens && props.sale.itens.length > 0) {
+      itens.value = props.sale.itens.map(it => ({ produto_id: it.produto_id, quantidade: it.quantidade }))
+    } else if (props.sale.produto_id) {
+      itens.value = [{ produto_id: props.sale.produto_id, quantidade: props.sale.quantidade }]
+    } else {
+      itens.value = []
+    }
   } else {
     data.value = format(new Date(), 'yyyy-MM-dd')
-    quantidade.value = 1
-    produtoId.value = productOptions.value[0]?.id ?? ''
     clienteId.value = 'none'
+    itens.value = []
+    addItem()
   }
 })
 
@@ -94,15 +124,14 @@ function onClientSaved(created: Client) {
 }
 
 async function submit() {
-  if (!produtoId.value || quantidade.value < 1 || saving.value) return
+  if (!isValid.value || saving.value) return
 
   saving.value = true
   try {
     const input = {
       data: data.value,
-      quantidade: quantidade.value,
-      produto_id: produtoId.value,
       cliente_id: clienteId.value && clienteId.value !== 'none' ? clienteId.value : null,
+      itens: itens.value.map(it => ({ ...it })) // ensure fresh copies
     }
     if (props.sale) {
       await store.updateSale(props.sale.id, input)
@@ -127,109 +156,140 @@ async function submit() {
         Nova venda
       </Button>
     </DialogTrigger>
-    <DialogContent class="sm:max-w-md">
+    <DialogContent class="sm:max-w-xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{{ isEdit() ? 'Editar venda' : 'Registrar venda' }}</DialogTitle>
         <DialogDescription>
-          O preço de custo e venda são buscados automaticamente da tabela de produtos.
+          Adicione um ou mais produtos a esta venda.
         </DialogDescription>
       </DialogHeader>
 
-      <form class="grid gap-4 py-2" @submit.prevent="submit">
-        <div class="grid gap-2">
-          <Label for="data">Data</Label>
-          <Input id="data" v-model="data" type="date" required :disabled="saving" />
-        </div>
-
-        <div class="grid gap-2">
-          <div class="flex items-center justify-between">
-            <Label>Cliente (opcional)</Label>
-            <Button
-              variant="link"
-              type="button"
-              size="sm"
-              class="h-auto p-0 text-xs font-normal text-primary hover:underline"
-              :disabled="saving"
-              @click="showNewClientDialog = true"
-            >
-              <UserPlus class="mr-1 size-3" />
-              Novo cliente
-            </Button>
+      <form class="grid gap-5 py-2" @submit.prevent="submit">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="grid gap-2">
+            <Label for="data">Data</Label>
+            <Input id="data" v-model="data" type="date" required :disabled="saving" />
           </div>
-          <Select v-model="clienteId" :disabled="saving">
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um cliente (opcional)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">
-                <span class="text-muted-foreground">Venda avulsa (sem cliente)</span>
-              </SelectItem>
-              <SelectItem
-                v-for="c in clientOptions"
-                :key="c.id"
-                :value="c.id"
+
+          <div class="grid gap-2">
+            <div class="flex items-center justify-between">
+              <Label>Cliente (opcional)</Label>
+              <Button
+                variant="link"
+                type="button"
+                size="sm"
+                class="h-auto p-0 text-xs font-normal text-primary hover:underline"
+                :disabled="saving"
+                @click="showNewClientDialog = true"
               >
-                {{ c.nome }} {{ c.apartamento }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+                <UserPlus class="mr-1 size-3" />
+                Novo cliente
+              </Button>
+            </div>
+            <Select v-model="clienteId" :disabled="saving">
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  <span class="text-muted-foreground">Venda avulsa</span>
+                </SelectItem>
+                <SelectItem
+                  v-for="c in clientOptions"
+                  :key="c.id"
+                  :value="c.id"
+                >
+                  {{ c.nome }} {{ c.apartamento }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div class="grid gap-2">
-          <Label>Produto</Label>
-          <Select v-model="produtoId" :disabled="saving">
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o produto" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="p in productOptions"
-                :key="p.id"
-                :value="p.id"
-              >
-                {{ p.nome }} — {{ formatCurrency(p.valor_venda) }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <Label class="text-base font-semibold">Itens da Venda</Label>
+          </div>
 
-        <div class="grid gap-2">
-          <Label>Quantidade</Label>
-          <Select
-            :model-value="quantidade.toString()"
+          <div class="space-y-3">
+            <div
+              v-for="(item, index) in itens"
+              :key="index"
+              class="flex items-end gap-2 p-3 rounded-md border bg-secondary/20"
+            >
+              <div class="grid gap-2 flex-1">
+                <Label class="text-xs text-muted-foreground">Produto</Label>
+                <Select v-model="item.produto_id" :disabled="saving">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="p in productOptions"
+                      :key="p.id"
+                      :value="p.id"
+                    >
+                      {{ p.nome }} — {{ formatCurrency(p.valor_venda) }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div class="grid gap-2 w-24">
+                <Label class="text-xs text-muted-foreground">Qtd</Label>
+                <Input 
+                  v-model.number="item.quantidade" 
+                  type="number" 
+                  min="1" 
+                  required 
+                  :disabled="saving"
+                  class="text-center"
+                />
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="text-destructive hover:bg-destructive/10 shrink-0"
+                :disabled="itens.length <= 1 || saving"
+                @click="removeItem(index)"
+              >
+                <Trash2 class="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="w-full border-dashed"
             :disabled="saving"
-            @update:model-value="quantidade = Number($event)"
+            @click="addItem"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a quantidade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="n in 20"
-                :key="n"
-                :value="n.toString()"
-              >
-                {{ n }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+            <Plus class="mr-2 size-4" />
+            Adicionar outro produto
+          </Button>
         </div>
 
-        <div
-          v-if="selectedProduct"
-          class="rounded-lg border border-secondary bg-secondary/60 p-3 text-sm"
-        >
-          <p>
-            <span class="text-muted-foreground">Venda unitária:</span>
-            {{ formatCurrency(selectedProduct.valor_venda) }}
-          </p>
-          <p>
-            <span class="text-muted-foreground">Custo unitário:</span>
-            {{ formatCurrency(selectedProduct.preco_custo) }}
-          </p>
-          <p class="mt-1 font-medium text-emerald-700 dark:text-emerald-400">
-            Lucro estimado: {{ formatCurrency(previewLucro) }}
-          </p>
+        <div class="rounded-lg border bg-muted/40 p-4 space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-muted-foreground">Total de itens:</span>
+            <span class="font-medium">{{ totalQuantidade }} unidades</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-muted-foreground">Custo total:</span>
+            <span class="font-medium">{{ formatCurrency(totalCusto) }}</span>
+          </div>
+          <div class="flex justify-between text-base font-semibold pt-2 border-t mt-2">
+            <span>Total da Venda:</span>
+            <span>{{ formatCurrency(totalVenda) }}</span>
+          </div>
+          <div class="flex justify-between text-sm font-medium text-emerald-600 dark:text-emerald-400">
+            <span>Lucro estimado:</span>
+            <span>{{ formatCurrency(totalLucro) }}</span>
+          </div>
         </div>
       </form>
 
@@ -239,7 +299,7 @@ async function submit() {
         </Button>
         <Button
           type="button"
-          :disabled="!produtoId || productOptions.length === 0 || saving"
+          :disabled="!isValid || saving"
           @click="submit"
         >
           <Loader2 v-if="saving" class="mr-2 size-4 animate-spin" />
@@ -249,11 +309,9 @@ async function submit() {
     </DialogContent>
   </Dialog>
 
-  <!-- Modal rápido de criação de cliente -->
   <ClientFormDialog
     v-model:open="showNewClientDialog"
     hide-trigger
     @saved="onClientSaved"
   />
 </template>
-
