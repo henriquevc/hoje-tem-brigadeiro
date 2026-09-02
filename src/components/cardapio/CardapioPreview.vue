@@ -57,21 +57,42 @@ const cardDimensionsStyle = computed(() => {
       return {
         width: '100%',
         maxWidth: '460px',
-        minHeight: '1180px',
+        minHeight: 'auto',
       }
     }
     if (count >= 5) {
       return {
         width: '100%',
         maxWidth: '440px',
-        minHeight: '960px',
+        minHeight: 'auto',
       }
     }
+    if (count === 4) {
+      return {
+        width: '100%',
+        maxWidth: '430px',
+        minHeight: 'auto',
+      }
+    }
+    if (count === 3) {
+      return {
+        width: '100%',
+        maxWidth: '420px',
+        minHeight: 'auto',
+      }
+    }
+    if (count === 2) {
+      return {
+        width: '100%',
+        maxWidth: '420px',
+        minHeight: 'auto',
+      }
+    }
+    // 1 item (ou 0)
     return {
       width: '100%',
-      maxWidth: '440px',
-      minHeight: '780px',
-      aspectRatio: '9 / 16',
+      maxWidth: '400px',
+      minHeight: 'auto',
     }
   }
 
@@ -79,23 +100,44 @@ const cardDimensionsStyle = computed(() => {
   if (count >= 7) {
     return {
       width: '100%',
-      maxWidth: '580px',
-      minHeight: '1220px',
+      maxWidth: '540px',
+      minHeight: 'auto',
     }
   }
   if (count >= 5) {
     return {
       width: '100%',
-      maxWidth: '580px',
-      minHeight: '960px',
+      maxWidth: '520px',
+      minHeight: 'auto',
+    }
+  }
+  if (count === 4) {
+    return {
+      width: '100%',
+      maxWidth: '500px',
+      minHeight: 'auto',
+    }
+  }
+  if (count === 3) {
+    return {
+      width: '100%',
+      maxWidth: '480px',
+      minHeight: 'auto',
+    }
+  }
+  if (count === 2) {
+    return {
+      width: '100%',
+      maxWidth: '460px',
+      minHeight: 'auto',
     }
   }
 
+  // 1 item (ou 0)
   return {
     width: '100%',
-    maxWidth: '580px',
-    minHeight: '725px',
-    aspectRatio: '4 / 5',
+    maxWidth: '430px',
+    minHeight: 'auto',
   }
 })
 
