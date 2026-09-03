@@ -39,7 +39,7 @@ defineEmits<{
             <span>doces artesanais</span>
           </div>
 
-          <h1 class="font-serif-luxury text-xl sm:text-2xl font-extrabold text-[#361b11] leading-tight tracking-tight mt-0.5">
+          <h1 class="font-serif-luxury text-xl sm:text-2xl font-extrabold text-[#361b11] leading-[1.2] tracking-tight mt-0.5">
             {{ store.subheading }}
           </h1>
 
@@ -82,7 +82,7 @@ defineEmits<{
           </div>
 
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2e160c]/95 via-[#2e160c]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-serif-luxury text-xs sm:text-sm font-bold text-[#f7efe6] line-clamp-2 leading-snug drop-shadow">
+            <span class="font-serif-luxury text-xs sm:text-sm font-bold text-[#f7efe6]  leading-snug drop-shadow">
               {{ items[0].name }}
             </span>
           </div>
@@ -116,7 +116,7 @@ defineEmits<{
           </div>
 
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2e160c]/95 via-[#2e160c]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-serif-luxury text-xs sm:text-sm font-bold text-[#f7efe6] line-clamp-2 leading-snug drop-shadow">
+            <span class="font-serif-luxury text-xs sm:text-sm font-bold text-[#f7efe6]  leading-snug drop-shadow">
               {{ item.name }}
             </span>
           </div>
@@ -142,7 +142,7 @@ defineEmits<{
         </div>
 
         <div class="flex items-baseline justify-center gap-1.5 mt-0.5">
-          <h1 class="font-serif-luxury text-xl sm:text-2xl font-extrabold text-[#361b11] leading-none tracking-tight">
+          <h1 class="font-serif-luxury text-xl sm:text-2xl font-extrabold text-[#361b11] leading-[1.2] tracking-tight">
             {{ store.subheading }}
           </h1>
           <span class="font-caveat text-xl sm:text-2xl font-bold text-[#5c301e]">
@@ -201,7 +201,7 @@ defineEmits<{
 
             <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2e160c]/95 via-[#2e160c]/80 to-transparent pt-5 pb-1.5 px-1.5 sm:px-2 text-center flex flex-col justify-end">
               <span
-                class="font-serif-luxury font-bold text-[#f7efe6] leading-snug line-clamp-2 drop-shadow"
+                class="font-serif-luxury font-bold text-[#f7efe6] leading-snug  drop-shadow"
                 :class="count === 1 ? 'text-sm sm:text-base' : count <= 4 ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'"
               >
                 {{ item.name }}

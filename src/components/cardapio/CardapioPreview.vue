@@ -162,7 +162,7 @@ async function handleDownload() {
 
     const dataUrl = await toPng(renderTargetRef.value, {
       pixelRatio: 3,
-      cacheBust: true,
+      cacheBust: false,
       quality: 1.0,
     })
 
@@ -191,7 +191,7 @@ async function handleCopyToClipboard() {
 
     const blob = await toBlob(renderTargetRef.value, {
       pixelRatio: 3,
-      cacheBust: true,
+      cacheBust: false,
       quality: 1.0,
     })
 

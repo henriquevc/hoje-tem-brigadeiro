@@ -31,11 +31,11 @@ defineEmits<{
       <div class="grid grid-cols-2 gap-2 sm:gap-3 items-center">
         <!-- Lado Esquerdo: Cabeçalho Compacto e Elegante -->
         <div class="flex flex-col justify-center text-center px-1">
-          <p class="font-cursive text-xl sm:text-2xl text-[#966b4d] tracking-wide leading-none">
+          <p class="font-cursive text-xl sm:text-2xl text-[#966b4d] tracking-wide leading-[1.2]">
             {{ store.subheading }}
           </p>
 
-          <h1 class="font-cinzel text-lg sm:text-xl font-bold tracking-widest text-[#2c2420] uppercase mt-0.5 leading-tight">
+          <h1 class="font-cinzel text-lg sm:text-xl font-bold tracking-widest text-[#2c2420] uppercase mt-0.5 leading-snug">
             {{ store.heading }}
           </h1>
 
@@ -71,7 +71,7 @@ defineEmits<{
             {{ items[0].price }}
           </div>
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2c2420]/95 via-[#2c2420]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-cinzel font-semibold text-white leading-snug line-clamp-2 text-xs sm:text-sm drop-shadow">
+            <span class="font-cinzel font-semibold text-white leading-snug  text-xs sm:text-sm drop-shadow">
               {{ items[0].name }}
             </span>
           </div>
@@ -103,7 +103,7 @@ defineEmits<{
             {{ item.price }}
           </div>
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2c2420]/95 via-[#2c2420]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-cinzel font-semibold text-white leading-snug line-clamp-2 text-xs sm:text-sm drop-shadow">
+            <span class="font-cinzel font-semibold text-white leading-snug  text-xs sm:text-sm drop-shadow">
               {{ item.name }}
             </span>
           </div>
@@ -125,7 +125,7 @@ defineEmits<{
           {{ store.subheading }}
         </p>
 
-        <h1 class="font-cinzel text-xl sm:text-2xl font-bold tracking-widest text-[#2c2420] uppercase mt-0.5 leading-tight">
+        <h1 class="font-cinzel text-xl sm:text-2xl font-bold tracking-widest text-[#2c2420] uppercase mt-0.5 leading-snug">
           {{ store.heading }}
         </h1>
 
@@ -179,7 +179,7 @@ defineEmits<{
             </div>
             <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2c2420]/95 via-[#2c2420]/80 to-transparent pt-5 pb-1.5 px-1.5 sm:px-2 text-center flex flex-col justify-end">
               <span
-                class="font-cinzel font-semibold text-white leading-snug line-clamp-2 drop-shadow"
+                class="font-cinzel font-semibold text-white leading-snug  drop-shadow"
                 :class="count === 1 ? 'text-sm sm:text-base' : count <= 4 ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'"
               >
                 {{ item.name }}

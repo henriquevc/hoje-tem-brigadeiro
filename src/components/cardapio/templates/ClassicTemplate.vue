@@ -35,13 +35,13 @@ defineEmits<{
         <div class="flex flex-col justify-center text-center px-1">
           <div class="flex items-center justify-center gap-1 text-amber-300/80 mb-0.5">
             <span class="text-xs transform -rotate-12 select-none">♡</span>
-            <p class="font-cursive text-xl sm:text-2xl text-amber-200 tracking-wide leading-none">
+            <p class="font-cursive text-xl sm:text-2xl text-amber-200 tracking-wide leading-[1.2]">
               {{ store.subheading }}
             </p>
             <span class="text-xs transform rotate-12 select-none">♡</span>
           </div>
 
-          <h2 class="font-serif-luxury text-lg sm:text-xl font-extrabold tracking-wider text-[#fdf8f0] uppercase drop-shadow-md leading-tight mt-0.5">
+          <h2 class="font-serif-luxury text-lg sm:text-xl font-extrabold tracking-wider text-[#fdf8f0] uppercase drop-shadow-md leading-snug mt-0.5">
             {{ store.heading }}
           </h2>
 
@@ -78,7 +78,7 @@ defineEmits<{
           </div>
 
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1f1008]/95 via-[#1f1008]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-serif-luxury font-bold text-[#fdf8f0] leading-snug line-clamp-2 text-xs sm:text-sm drop-shadow">
+            <span class="font-serif-luxury font-bold text-[#fdf8f0] leading-snug  text-xs sm:text-sm drop-shadow">
               {{ items[0].name }}
             </span>
           </div>
@@ -112,7 +112,7 @@ defineEmits<{
           </div>
 
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1f1008]/95 via-[#1f1008]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-serif-luxury font-bold text-[#fdf8f0] leading-snug line-clamp-2 text-xs sm:text-sm drop-shadow">
+            <span class="font-serif-luxury font-bold text-[#fdf8f0] leading-snug  text-xs sm:text-sm drop-shadow">
               {{ item.name }}
             </span>
           </div>
@@ -139,7 +139,7 @@ defineEmits<{
           <span class="text-xs sm:text-sm transform rotate-12 select-none">♡</span>
         </div>
 
-        <h2 class="font-serif-luxury text-xl sm:text-2xl font-extrabold tracking-wider text-[#fdf8f0] uppercase drop-shadow-md leading-tight mt-0.5">
+        <h2 class="font-serif-luxury text-xl sm:text-2xl font-extrabold tracking-wider text-[#fdf8f0] uppercase drop-shadow-md leading-snug mt-0.5">
           {{ store.heading }}
         </h2>
 
@@ -194,7 +194,7 @@ defineEmits<{
 
             <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1f1008]/95 via-[#1f1008]/80 to-transparent pt-5 pb-1.5 px-1.5 sm:px-2 text-center flex flex-col justify-end">
               <span
-                class="font-serif-luxury font-bold text-[#fdf8f0] leading-snug line-clamp-2 drop-shadow"
+                class="font-serif-luxury font-bold text-[#fdf8f0] leading-snug  drop-shadow"
                 :class="count === 1 ? 'text-sm sm:text-base' : count <= 4 ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'"
               >
                 {{ item.name }}

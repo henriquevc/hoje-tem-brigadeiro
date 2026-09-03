@@ -35,13 +35,13 @@ defineEmits<{
         <div class="flex flex-col justify-center text-center px-1">
           <div class="flex items-center justify-center gap-1 text-pink-300/90 mb-0.5">
             <span class="text-xs transform -rotate-12 select-none">♡</span>
-            <p class="font-cursive text-xl sm:text-2xl text-pink-200 tracking-wide leading-none">
+            <p class="font-cursive text-xl sm:text-2xl text-pink-200 tracking-wide leading-[1.2]">
               {{ store.subheading }}
             </p>
             <span class="text-xs transform rotate-12 select-none">♡</span>
           </div>
 
-          <h2 class="font-serif-luxury text-lg sm:text-xl font-extrabold tracking-wider text-pink-50 uppercase drop-shadow-md leading-tight mt-0.5">
+          <h2 class="font-serif-luxury text-lg sm:text-xl font-extrabold tracking-wider text-pink-50 uppercase drop-shadow-md leading-snug mt-0.5">
             {{ store.heading }}
           </h2>
 
@@ -72,13 +72,13 @@ defineEmits<{
               objectPosition: `${items[0].positionX ?? 50}% ${items[0].positionY ?? 50}%`,
             }"
           />
-          <div class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black text-xs sm:text-sm px-2 py-0.5 shadow-lg leading-none flex items-center gap-0.5">
+          <div class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black text-xs sm:text-sm px-2 py-0.5 shadow-lg leading-[1.2] flex items-center gap-0.5">
             <span class="text-[8.5px] uppercase font-bold opacity-80">R$</span>
             {{ items[0].price }}
           </div>
 
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1e0e14]/95 via-[#1e0e14]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-serif-luxury font-bold text-pink-50 leading-snug line-clamp-2 text-xs sm:text-sm drop-shadow">
+            <span class="font-serif-luxury font-bold text-pink-50 leading-snug  text-xs sm:text-sm drop-shadow">
               {{ items[0].name }}
             </span>
           </div>
@@ -106,13 +106,13 @@ defineEmits<{
               objectPosition: `${item.positionX ?? 50}% ${item.positionY ?? 50}%`,
             }"
           />
-          <div class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black text-xs sm:text-sm px-2 py-0.5 shadow-lg leading-none flex items-center gap-0.5">
+          <div class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black text-xs sm:text-sm px-2 py-0.5 shadow-lg leading-[1.2] flex items-center gap-0.5">
             <span class="text-[8.5px] uppercase font-bold opacity-80">R$</span>
             {{ item.price }}
           </div>
 
           <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1e0e14]/95 via-[#1e0e14]/80 to-transparent pt-5 pb-1.5 px-1.5 text-center flex flex-col justify-end">
-            <span class="font-serif-luxury font-bold text-pink-50 leading-snug line-clamp-2 text-xs sm:text-sm drop-shadow">
+            <span class="font-serif-luxury font-bold text-pink-50 leading-snug  text-xs sm:text-sm drop-shadow">
               {{ item.name }}
             </span>
           </div>
@@ -133,13 +133,13 @@ defineEmits<{
       <div class="text-center pt-0 mb-0.5 sm:mb-1">
         <div class="flex items-center justify-center gap-1.5 text-pink-300/90 mb-0.5">
           <span class="text-xs sm:text-sm transform -rotate-12 select-none">♡</span>
-          <p class="font-cursive text-xl sm:text-2xl text-pink-200 tracking-wide leading-none">
+          <p class="font-cursive text-xl sm:text-2xl text-pink-200 tracking-wide leading-[1.2]">
             {{ store.subheading }}
           </p>
           <span class="text-xs sm:text-sm transform rotate-12 select-none">♡</span>
         </div>
 
-        <h2 class="font-serif-luxury text-xl sm:text-2xl font-extrabold tracking-wider text-pink-50 uppercase drop-shadow-md leading-tight mt-0.5">
+        <h2 class="font-serif-luxury text-xl sm:text-2xl font-extrabold tracking-wider text-pink-50 uppercase drop-shadow-md leading-snug mt-0.5">
           {{ store.heading }}
         </h2>
 
@@ -185,7 +185,7 @@ defineEmits<{
               }"
             />
             <div
-              class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black px-2 py-0.5 shadow-lg leading-none flex items-center gap-0.5"
+              class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black px-2 py-0.5 shadow-lg leading-[1.2] flex items-center gap-0.5"
               :class="count === 1 ? 'text-xs sm:text-base' : 'text-xs sm:text-sm'"
             >
               <span class="text-[8.5px] uppercase font-bold opacity-80">R$</span>
@@ -194,7 +194,7 @@ defineEmits<{
 
             <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#1e0e14]/95 via-[#1e0e14]/80 to-transparent pt-5 pb-1.5 px-1.5 sm:px-2 text-center flex flex-col justify-end">
               <span
-                class="font-serif-luxury font-bold text-pink-50 leading-snug line-clamp-2 drop-shadow"
+                class="font-serif-luxury font-bold text-pink-50 leading-snug  drop-shadow"
                 :class="count === 1 ? 'text-sm sm:text-base' : count <= 4 ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs'"
               >
                 {{ item.name }}
@@ -214,15 +214,15 @@ defineEmits<{
       <div class="flex items-center gap-1.5 text-pink-200 justify-start">
         <span class="text-xs">📷</span>
         <div class="text-left">
-          <span class="text-[7.5px] uppercase tracking-widest text-pink-300/70 block font-sans leading-none">Siga no Instagram</span>
-          <span class="text-[11px] sm:text-xs font-bold tracking-wide text-pink-100 leading-tight">
+          <span class="text-[7.5px] uppercase tracking-widest text-pink-300/70 block font-sans leading-[1.2]">Siga no Instagram</span>
+          <span class="text-[11px] sm:text-xs font-bold tracking-wide text-pink-100 leading-snug">
             {{ store.instagram }}
           </span>
         </div>
       </div>
 
       <div class="text-right">
-        <span class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] text-pink-200 font-medium bg-pink-950/80 px-2 py-0.5 rounded-full border border-pink-400/30 leading-none">
+        <span class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] text-pink-200 font-medium bg-pink-950/80 px-2 py-0.5 rounded-full border border-pink-400/30 leading-[1.2]">
           {{ store.whatsapp }}
         </span>
       </div>
