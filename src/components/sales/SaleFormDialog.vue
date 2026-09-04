@@ -165,7 +165,7 @@ async function submit() {
       </DialogHeader>
 
       <form class="grid gap-5 py-2" @submit.prevent="submit">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid gap-4 sm:grid-cols-2">
           <div class="grid gap-2">
             <Label for="data">Data</Label>
             <Input id="data" v-model="data" type="date" required :disabled="saving" />
@@ -215,9 +215,9 @@ async function submit() {
             <div
               v-for="(item, index) in itens"
               :key="index"
-              class="flex items-end gap-2 p-3 rounded-md border bg-secondary/20"
+              class="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-2 p-3 rounded-md border bg-secondary/20"
             >
-              <div class="grid gap-2 flex-1">
+              <div class="grid gap-2 w-full sm:flex-1">
                 <Label class="text-xs text-muted-foreground">Produto</Label>
                 <Select v-model="item.produto_id" :disabled="saving">
                   <SelectTrigger>
@@ -235,28 +235,30 @@ async function submit() {
                 </Select>
               </div>
 
-              <div class="grid gap-2 w-24">
-                <Label class="text-xs text-muted-foreground">Qtd</Label>
-                <Input 
-                  v-model.number="item.quantidade" 
-                  type="number" 
-                  min="1" 
-                  required 
-                  :disabled="saving"
-                  class="text-center"
-                />
-              </div>
+              <div class="flex items-end gap-2 w-full sm:w-auto">
+                <div class="grid gap-2 flex-1 sm:w-24">
+                  <Label class="text-xs text-muted-foreground">Qtd</Label>
+                  <Input 
+                    v-model.number="item.quantidade" 
+                    type="number" 
+                    min="1" 
+                    required 
+                    :disabled="saving"
+                    class="text-center"
+                  />
+                </div>
 
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                class="text-destructive hover:bg-destructive/10 shrink-0"
-                :disabled="itens.length <= 1 || saving"
-                @click="removeItem(index)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  class="text-destructive hover:bg-destructive/10 shrink-0"
+                  :disabled="itens.length <= 1 || saving"
+                  @click="removeItem(index)"
+                >
+                  <Trash2 class="size-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
