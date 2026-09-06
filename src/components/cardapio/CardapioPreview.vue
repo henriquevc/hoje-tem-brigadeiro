@@ -151,25 +151,77 @@ async function prepareFonts() {
   }
 }
 
+async function generateImageBlob() {
+  if (!renderTargetRef.value) throw new Error('Elemento não encontrado')
+  await prepareFonts()
+
+  const config = {
+    pixelRatio: 3,
+    // Safari/iOS precisa de cacheBust para evitar erros de renderização ou imagens em branco
+    cacheBust: true,
+    quality: 1.0,
+  }
+
+  // Workaround clássico para Safari/iOS com html-to-image:
+  // A primeira renderização costuma falhar, ficar incompleta ou omitir fontes.
+  // Fazemos uma ou duas passadas de "aquecimento".
+  try {
+    await toPng(renderTargetRef.value, { ...config, pixelRatio: 1 })
+    await new Promise(r => setTimeout(r, 150))
+    await toPng(renderTargetRef.value, { ...config, pixelRatio: 1 })
+    await new Promise(r => setTimeout(r, 150))
+  } catch (e) {
+    console.warn('Erro na pré-renderização (Safari workaround):', e)
+  }
+
+  const blob = await toBlob(renderTargetRef.value, config)
+  if (!blob) {
+    throw new Error('Falha ao gerar blob da imagem')
+  }
+  return blob
+}
+
 async function handleDownload() {
   if (isExporting.value) return
   isExporting.value = true
   emit('toast', 'Processando imagem em Alta Resolução (HD)...', 'info')
 
   try {
-    if (!renderTargetRef.value) throw new Error('Elemento não encontrado')
-    await prepareFonts()
+    const blob = await generateImageBlob()
+    const filename = `cardapio-hojetembrigadeiro-${store.templateId}-${Date.now()}.png`
 
-    const dataUrl = await toPng(renderTargetRef.value, {
-      pixelRatio: 3,
-      cacheBust: false,
-      quality: 1.0,
-    })
+    // Tentar usar o Web Share API para mobile (iOS/Android), que funciona
+    // muito melhor para salvar na galeria ou compartilhar direto.
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    if (isMobile && navigator.share && navigator.canShare) {
+      const file = new File([blob], filename, { type: 'image/png' })
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'Cardápio',
+            files: [file]
+          })
+          emit('toast', 'Ação concluída com sucesso!', 'success')
+          return
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') {
+             // Usuário fechou o menu de share, encerramos por aqui
+             return
+          }
+          console.warn('Share API falhou, tentando fallback de download', shareErr)
+        }
+      }
+    }
 
+    // Fallback padrão: gerar tag <a> e forçar download
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.download = `cardapio-hojetembrigadeiro-${store.templateId}-${Date.now()}.png`
-    link.href = dataUrl
+    link.download = filename
+    link.href = url
+    document.body.appendChild(link)
     link.click()
+    document.body.removeChild(link)
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
 
     emit('toast', 'Imagem HD baixada com sucesso!', 'success')
   } catch (err) {
@@ -186,18 +238,7 @@ async function handleCopyToClipboard() {
   emit('toast', 'Copiando imagem para a área de transferência...', 'info')
 
   try {
-    if (!renderTargetRef.value) throw new Error('Elemento não encontrado')
-    await prepareFonts()
-
-    const blob = await toBlob(renderTargetRef.value, {
-      pixelRatio: 3,
-      cacheBust: false,
-      quality: 1.0,
-    })
-
-    if (!blob) {
-      throw new Error('Falha ao gerar blob da imagem')
-    }
+    const blob = await generateImageBlob()
 
     try {
       await navigator.clipboard.write([
@@ -212,13 +253,16 @@ async function handleCopyToClipboard() {
       }, 3000)
     } catch (clipErr) {
       console.warn('Clipboard API com erro:', clipErr)
-      // Fallback: faz download se a permissão do clipboard falhar
+      isExporting.value = false // Permite que a função de download execute
       handleDownload()
+      return
     }
   } catch (err) {
     console.error('Erro ao copiar imagem:', err)
     emit('toast', 'Não foi possível copiar diretamente. Usando download...', 'info')
+    isExporting.value = false // Permite que a função de download execute
     handleDownload()
+    return
   } finally {
     isExporting.value = false
   }
