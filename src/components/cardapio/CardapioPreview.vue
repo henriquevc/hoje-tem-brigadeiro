@@ -48,96 +48,12 @@ const currentTemplateComponent = computed(() => {
   }
 })
 
-// Dimensões do cartão de acordo com o formato escolhido e quantidade de produtos
+// Dimensões do cartão de acordo com o formato escolhido (sempre altura natural)
 const cardDimensionsStyle = computed(() => {
-  const count = store.items.length
-
-  if (store.format === 'story') {
-    if (count >= 7) {
-      return {
-        width: '100%',
-        maxWidth: '460px',
-        minHeight: 'auto',
-      }
-    }
-    if (count >= 5) {
-      return {
-        width: '100%',
-        maxWidth: '440px',
-        minHeight: 'auto',
-      }
-    }
-    if (count === 4) {
-      return {
-        width: '100%',
-        maxWidth: '430px',
-        minHeight: 'auto',
-      }
-    }
-    if (count === 3) {
-      return {
-        width: '100%',
-        maxWidth: '420px',
-        minHeight: 'auto',
-      }
-    }
-    if (count === 2) {
-      return {
-        width: '100%',
-        maxWidth: '420px',
-        minHeight: 'auto',
-      }
-    }
-    // 1 item (ou 0)
-    return {
-      width: '100%',
-      maxWidth: '400px',
-      minHeight: 'auto',
-    }
-  }
-
-  // Formato Feed / WhatsApp
-  if (count >= 7) {
-    return {
-      width: '100%',
-      maxWidth: '540px',
-      minHeight: 'auto',
-    }
-  }
-  if (count >= 5) {
-    return {
-      width: '100%',
-      maxWidth: '520px',
-      minHeight: 'auto',
-    }
-  }
-  if (count === 4) {
-    return {
-      width: '100%',
-      maxWidth: '500px',
-      minHeight: 'auto',
-    }
-  }
-  if (count === 3) {
-    return {
-      width: '100%',
-      maxWidth: '480px',
-      minHeight: 'auto',
-    }
-  }
-  if (count === 2) {
-    return {
-      width: '100%',
-      maxWidth: '460px',
-      minHeight: 'auto',
-    }
-  }
-
-  // 1 item (ou 0)
   return {
     width: '100%',
-    maxWidth: '430px',
-    minHeight: 'auto',
+    maxWidth: store.format === 'story' ? '440px' : '480px',
+    height: 'auto',
   }
 })
 
@@ -155,30 +71,40 @@ async function generateImageBlob() {
   if (!renderTargetRef.value) throw new Error('Elemento não encontrado')
   await prepareFonts()
 
-  const config = {
-    pixelRatio: 3,
-    // Safari/iOS precisa de cacheBust para evitar erros de renderização ou imagens em branco
-    cacheBust: true,
-    quality: 1.0,
-  }
+  const node = renderTargetRef.value
+  const originalWidth = node.style.width
 
-  // Workaround clássico para Safari/iOS com html-to-image:
-  // A primeira renderização costuma falhar, ficar incompleta ou omitir fontes.
-  // Fazemos uma ou duas passadas de "aquecimento".
+  // Largura canônica consistente para a exportação HD
+  const targetWidth = store.format === 'story' ? 440 : 480
+  node.style.width = `${targetWidth}px`
+
+  // Força recalcular tamanhos
+  void node.offsetHeight
+
   try {
-    await toPng(renderTargetRef.value, { ...config, pixelRatio: 1 })
-    await new Promise(r => setTimeout(r, 150))
-    await toPng(renderTargetRef.value, { ...config, pixelRatio: 1 })
-    await new Promise(r => setTimeout(r, 150))
-  } catch (e) {
-    console.warn('Erro na pré-renderização (Safari workaround):', e)
-  }
+    const config = {
+      pixelRatio: 2.5,
+      cacheBust: true,
+      quality: 1.0,
+      width: targetWidth,
+    }
 
-  const blob = await toBlob(renderTargetRef.value, config)
-  if (!blob) {
-    throw new Error('Falha ao gerar blob da imagem')
+    // Passada rápida de aquecimento para fontes e imagens
+    try {
+      await toPng(node, { ...config, pixelRatio: 1 })
+      await new Promise((r) => setTimeout(r, 100))
+    } catch (e) {
+      console.warn('Erro na pré-renderização:', e)
+    }
+
+    const blob = await toBlob(node, config)
+    if (!blob) {
+      throw new Error('Falha ao gerar blob da imagem')
+    }
+    return blob
+  } finally {
+    node.style.width = originalWidth
   }
-  return blob
 }
 
 async function handleDownload() {
@@ -369,7 +295,7 @@ function handleShareWhatsAppText() {
     <div class="w-full flex justify-center overflow-x-auto py-2 px-1">
       <div
         ref="renderTargetRef"
-        class="transition-all duration-300 shadow-2xl overflow-hidden flex flex-col"
+        class="transition-all duration-300 shadow-2xl overflow-hidden flex flex-col rounded-[28px]"
         :style="cardDimensionsStyle"
       >
         <component
