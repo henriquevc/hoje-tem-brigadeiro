@@ -16,7 +16,7 @@ defineEmits<{
 
 <template>
   <div
-    class="w-full relative overflow-hidden flex flex-col p-4 sm:p-5 bg-[#2b170e] text-white font-sans select-none border-4 border-[#d4a73a]/40 shadow-2xl subtle-grain rounded-[28px]"
+    class="w-full relative overflow-hidden flex flex-col p-4 sm:p-5 bg-[#2b170e] text-white font-sans select-none border-4 border-[#d4a73a]/40 subtle-grain rounded-[28px]"
     style="box-sizing: border-box;"
   >
     <!-- Elementos Decorativos de Fundo / Moldura -->

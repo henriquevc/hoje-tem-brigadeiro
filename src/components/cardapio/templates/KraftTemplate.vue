@@ -16,7 +16,7 @@ defineEmits<{
 
 <template>
   <div
-    class="w-full relative overflow-hidden flex flex-col p-4 sm:p-5 cardapio-kraft-bg text-[#361b11] font-sans select-none rounded-[28px] border-4 border-[#d9c4aa] shadow-2xl"
+    class="w-full relative overflow-hidden flex flex-col p-4 sm:p-5 cardapio-kraft-bg text-[#361b11] font-sans select-none rounded-[28px] border-4 border-[#d9c4aa]"
     style="box-sizing: border-box;"
   >
     <!-- Cantoneiras e detalhes rústicos -->

@@ -44,7 +44,11 @@ const emit = defineEmits<{
 }>()
 
 const renderTargetRef = ref<HTMLElement | null>(null)
-const isExporting = ref(false)
+
+// Estados de loading independentes para evitar travamento de botões
+const isDownloading = ref(false)
+const isCopying = ref(false)
+const isExporting = computed(() => isDownloading.value || isCopying.value)
 const isCopied = ref(false)
 
 // Estado do modal de exportação móvel (iPhone / Safari / Chrome iOS)
@@ -150,21 +154,38 @@ async function generateImageDataUrl(): Promise<string> {
   await preloadAllImages(node)
 
   const originalWidth = node.style.width
+  const originalMinWidth = node.style.minWidth
   const originalMaxWidth = node.style.maxWidth
+  const originalBoxShadow = node.style.boxShadow
+  const originalTransition = node.style.transition
+
+  // Desativa transições durante captura para evitar layout intermediário animado
+  node.style.transition = 'none'
 
   // Largura canônica consistente para a exportação HD
   const targetWidth = 480
-  node.style.width = `${targetWidth}px`
-  node.style.maxWidth = `${targetWidth}px`
 
-  // Força recalcular layout
+  // Força 480px exatos sem encolher pelo flexbox do mobile e remove sombra externa
+  node.style.width = `${targetWidth}px`
+  node.style.minWidth = `${targetWidth}px`
+  node.style.maxWidth = `${targetWidth}px`
+  node.style.boxShadow = 'none'
+
+  // Força recálculo imediato de layout síncrono
   void node.offsetHeight
+  const targetHeight = node.offsetHeight
 
   try {
     const config = {
       pixelRatio: 2, // 480 * 2 = 960px, extremamente nítido e seguro na memória do iOS WebKit
       quality: 0.95,
       width: targetWidth,
+      height: targetHeight,
+      style: {
+        boxShadow: 'none',
+        transition: 'none',
+        margin: '0',
+      },
       imagePlaceholder: FALLBACK_IMAGE_DATA_URL,
       cacheBust: false,
     }
@@ -178,7 +199,7 @@ async function generateImageDataUrl(): Promise<string> {
     }
     await new Promise((r) => setTimeout(r, 180))
 
-    // Segunda passada: imagens decodificadas, gerando a imagem HD completa sem quadros pretos
+    // Segunda passada: imagens decodificadas, gravando exatamente targetWidth x targetHeight
     const dataUrl = await toPng(node, config)
 
     if (!dataUrl || dataUrl === 'data:,') {
@@ -187,13 +208,16 @@ async function generateImageDataUrl(): Promise<string> {
     return dataUrl
   } finally {
     node.style.width = originalWidth
+    node.style.minWidth = originalMinWidth
     node.style.maxWidth = originalMaxWidth
+    node.style.boxShadow = originalBoxShadow
+    node.style.transition = originalTransition
   }
 }
 
 async function handleDownload() {
   if (isExporting.value) return
-  isExporting.value = true
+  isDownloading.value = true
   emit('toast', 'Gerando cardápio em Alta Resolução (HD)...', 'info')
 
   const isIos = isIosDevice()
@@ -264,48 +288,48 @@ async function handleDownload() {
     console.error('Erro ao baixar cardápio:', err)
     emit('toast', 'Erro ao exportar cardápio. Tente novamente!', 'error')
   } finally {
-    isExporting.value = false
+    isDownloading.value = false
   }
 }
 
 async function handleCopyToClipboard() {
   if (isExporting.value) return
-  isExporting.value = true
+  isCopying.value = true
   emit('toast', 'Preparando imagem do cardápio...', 'info')
 
-  const isIos = isIosDevice()
-
-  // No Safari (iOS e macOS), a chamada do ClipboardItem precisa ser disparada
-  // com uma Promise síncrona dentro do evento de clique, preservando a ativação transitória do usuário
-  if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-    try {
-      const blobPromise = (async () => {
-        const dataUrl = await generateImageDataUrl()
-        const blob = dataUrlToBlob(dataUrl)
-        exportPreviewUrl.value = dataUrl
-        exportBlob.value = blob
-        exportFilename.value = `cardapio-hojetembrigadeiro-${store.templateId}-${Date.now()}.png`
-        return blob
-      })()
-
-      const item = new ClipboardItem({
-        'image/png': blobPromise,
-      })
-
-      await navigator.clipboard.write([item])
-      isCopied.value = true
-      emit('toast', 'Imagem copiada! Agora basta colar (Ctrl+V) no WhatsApp.', 'success')
-      setTimeout(() => {
-        isCopied.value = false
-      }, 3500)
-      return
-    } catch (clipErr) {
-      console.warn('Cópia direta no clipboard falhou:', clipErr)
-    }
-  }
-
-  // Fallback: se não conseguiu copiar direto (ex: Chrome no iPhone que bloqueia clipboard de imagens)
   try {
+    const isIos = isIosDevice()
+
+    // No Safari (iOS e macOS), a chamada do ClipboardItem precisa ser disparada
+    // com uma Promise síncrona dentro do evento de clique, preservando a ativação transitória do usuário
+    if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+      try {
+        const blobPromise = (async () => {
+          const dataUrl = await generateImageDataUrl()
+          const blob = dataUrlToBlob(dataUrl)
+          exportPreviewUrl.value = dataUrl
+          exportBlob.value = blob
+          exportFilename.value = `cardapio-hojetembrigadeiro-${store.templateId}-${Date.now()}.png`
+          return blob
+        })()
+
+        const item = new ClipboardItem({
+          'image/png': blobPromise,
+        })
+
+        await navigator.clipboard.write([item])
+        isCopied.value = true
+        emit('toast', 'Imagem copiada! Agora basta colar (Ctrl+V) no WhatsApp.', 'success')
+        setTimeout(() => {
+          isCopied.value = false
+        }, 3500)
+        return
+      } catch (clipErr) {
+        console.warn('Cópia direta no clipboard falhou:', clipErr)
+      }
+    }
+
+    // Fallback: se não conseguiu copiar direto (ex: Chrome no iPhone que bloqueia clipboard de imagens)
     if (!exportPreviewUrl.value) {
       const dataUrl = await generateImageDataUrl()
       exportPreviewUrl.value = dataUrl
@@ -326,7 +350,7 @@ async function handleCopyToClipboard() {
     console.error('Erro ao processar imagem:', err)
     emit('toast', 'Erro ao processar cardápio. Tente novamente!', 'error')
   } finally {
-    isExporting.value = false
+    isCopying.value = false
   }
 }
 
@@ -434,9 +458,10 @@ function handleShareWhatsAppText() {
           @click="handleCopyToClipboard"
           title="Copie e cole direto na conversa com Ctrl+V"
         >
-          <Check v-if="isCopied" class="size-4 text-emerald-600 animate-bounce" />
+          <RefreshCw v-if="isCopying" class="size-4 animate-spin text-amber-600" />
+          <Check v-else-if="isCopied" class="size-4 text-emerald-600 animate-bounce" />
           <Copy v-else class="size-4 text-amber-600" />
-          <span>{{ isCopied ? 'Copiado!' : 'Copiar Imagem (Ctrl+V)' }}</span>
+          <span>{{ isCopying ? 'Copiando...' : (isCopied ? 'Copiado!' : 'Copiar Imagem (Ctrl+V)') }}</span>
         </Button>
 
         <!-- Baixar Imagem HD -->
@@ -447,9 +472,9 @@ function handleShareWhatsAppText() {
           :disabled="isExporting"
           @click="handleDownload"
         >
-          <RefreshCw v-if="isExporting" class="size-4 animate-spin" />
+          <RefreshCw v-if="isDownloading" class="size-4 animate-spin" />
           <Download v-else class="size-4" />
-          <span>Baixar Imagem HD</span>
+          <span>{{ isDownloading ? 'Gerando HD...' : 'Baixar Imagem HD' }}</span>
         </Button>
 
         <!-- Compartilhar Texto WhatsApp -->
