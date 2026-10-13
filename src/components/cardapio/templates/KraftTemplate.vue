@@ -67,6 +67,8 @@ defineEmits<{
           @click="$emit('selectPhoto', items[0])"
         >
           <img
+            crossorigin="anonymous"
+            loading="eager"
             :src="items[0].image"
             :alt="items[0].name"
             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
@@ -101,6 +103,8 @@ defineEmits<{
           @click="$emit('selectPhoto', item)"
         >
           <img
+            crossorigin="anonymous"
+            loading="eager"
             :src="item.image"
             :alt="item.name"
             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
@@ -172,6 +176,8 @@ defineEmits<{
             @click="$emit('selectPhoto', item)"
           >
             <img
+              crossorigin="anonymous"
+              loading="eager"
               :src="item.image"
               :alt="item.name"
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"

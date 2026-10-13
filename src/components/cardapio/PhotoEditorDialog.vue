@@ -46,15 +46,46 @@ watch(
 
 function handleFileUpload(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        currentImage.value = e.target.result as string
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const rawData = e.target?.result as string
+    if (!rawData) return
+
+    const img = new Image()
+    img.onload = () => {
+      const maxDim = 1200
+      let width = img.width
+      let height = img.height
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width)
+          width = maxDim
+        } else {
+          width = Math.round((width * maxDim) / height)
+          height = maxDim
+        }
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height)
+        currentImage.value = canvas.toDataURL('image/jpeg', 0.88)
+      } else {
+        currentImage.value = rawData
       }
     }
-    reader.readAsDataURL(file)
+    img.onerror = () => {
+      currentImage.value = rawData
+    }
+    img.src = rawData
   }
+  reader.readAsDataURL(file)
 }
 
 function applyUrl() {
