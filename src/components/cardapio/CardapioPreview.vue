@@ -28,6 +28,7 @@ import CacauNobreTemplate from './templates/CacauNobreTemplate.vue'
 import ClassicTemplate from './templates/ClassicTemplate.vue'
 import PatisserieTemplate from './templates/PatisserieTemplate.vue'
 import RoseTemplate from './templates/RoseTemplate.vue'
+import { FALLBACK_IMAGE_DATA_URL } from '@/utils/imageFallback'
 
 const store = useCardapioStore()
 
@@ -121,11 +122,33 @@ async function prepareFonts() {
   }
 }
 
+async function preloadAllImages(node: HTMLElement) {
+  const imgs = Array.from(node.querySelectorAll('img'))
+  await Promise.all(
+    imgs.map((img) => {
+      return new Promise<void>((resolve) => {
+        if (img.complete && img.naturalWidth > 0) {
+          resolve()
+          return
+        }
+        img.onload = () => resolve()
+        img.onerror = () => {
+          img.src = FALLBACK_IMAGE_DATA_URL
+          resolve()
+        }
+        setTimeout(resolve, 600)
+      })
+    })
+  )
+}
+
 async function generateImageDataUrl(): Promise<string> {
   if (!renderTargetRef.value) throw new Error('Elemento não encontrado')
   await prepareFonts()
 
   const node = renderTargetRef.value
+  await preloadAllImages(node)
+
   const originalWidth = node.style.width
   const originalMaxWidth = node.style.maxWidth
 
@@ -138,11 +161,25 @@ async function generateImageDataUrl(): Promise<string> {
   void node.offsetHeight
 
   try {
-    const dataUrl = await toPng(node, {
+    const config = {
       pixelRatio: 2, // 480 * 2 = 960px, extremamente nítido e seguro na memória do iOS WebKit
       quality: 0.95,
       width: targetWidth,
-    })
+      imagePlaceholder: FALLBACK_IMAGE_DATA_URL,
+      cacheBust: false,
+    }
+
+    // No WebKit (Safari & Chrome no iPhone), a primeira passada força o motor gráfico
+    // a carregar e decodificar texturas das imagens antes de gravar no canvas final.
+    try {
+      await toPng(node, { ...config, pixelRatio: 1 })
+    } catch (warmErr) {
+      console.warn('Aquecimento inicial ignorado:', warmErr)
+    }
+    await new Promise((r) => setTimeout(r, 180))
+
+    // Segunda passada: imagens decodificadas, gerando a imagem HD completa sem quadros pretos
+    const dataUrl = await toPng(node, config)
 
     if (!dataUrl || dataUrl === 'data:,') {
       throw new Error('Falha ao gerar dados da imagem do cardápio')

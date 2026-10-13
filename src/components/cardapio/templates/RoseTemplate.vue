@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCardapioStore, type CardapioItem } from '@/stores/cardapio'
+import { FALLBACK_IMAGE_DATA_URL, handleImgError } from '@/utils/imageFallback'
 
 const store = useCardapioStore()
 const items = computed(() => store.items)
@@ -60,18 +61,24 @@ defineEmits<{
         <!-- Lado Direito: Item 1 -->
         <div
           class="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-pink-300/40 bg-[#1e0e14] shadow-xl group cursor-pointer"
+          :style="{
+            backgroundImage: `url('${items[0]?.image || FALLBACK_IMAGE_DATA_URL}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: `${items[0]?.positionX ?? 50}% ${items[0]?.positionY ?? 50}%`,
+          }"
           @click="$emit('selectPhoto', items[0])"
         >
           <img
             crossorigin="anonymous"
             loading="eager"
-            :src="items[0].image"
-            :alt="items[0].name"
-            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
+            :src="items[0]?.image || FALLBACK_IMAGE_DATA_URL"
+            :alt="items[0]?.name"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
             :style="{
-              transform: `scale(${items[0].zoom || 1})`,
-              objectPosition: `${items[0].positionX ?? 50}% ${items[0].positionY ?? 50}%`,
+              transform: `scale(${items[0]?.zoom || 1})`,
+              objectPosition: `${items[0]?.positionX ?? 50}% ${items[0]?.positionY ?? 50}%`,
             }"
+            @error="handleImgError"
           />
           <div class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black text-xs sm:text-sm px-2 py-0.5 shadow-lg leading-tight flex items-center gap-0.5">
             <span class="text-[8.5px] uppercase font-bold opacity-80">R$</span>
@@ -96,18 +103,24 @@ defineEmits<{
           v-for="item in items.slice(1)"
           :key="item.id"
           class="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-pink-300/40 bg-[#1e0e14] shadow-xl group cursor-pointer"
+          :style="{
+            backgroundImage: `url('${item.image || FALLBACK_IMAGE_DATA_URL}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: `${item.positionX ?? 50}% ${item.positionY ?? 50}%`,
+          }"
           @click="$emit('selectPhoto', item)"
         >
           <img
             crossorigin="anonymous"
             loading="eager"
-            :src="item.image"
+            :src="item.image || FALLBACK_IMAGE_DATA_URL"
             :alt="item.name"
-            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
             :style="{
               transform: `scale(${item.zoom || 1})`,
               objectPosition: `${item.positionX ?? 50}% ${item.positionY ?? 50}%`,
             }"
+            @error="handleImgError"
           />
           <div class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black text-xs sm:text-sm px-2 py-0.5 shadow-lg leading-tight flex items-center gap-0.5">
             <span class="text-[8.5px] uppercase font-bold opacity-80">R$</span>
@@ -169,18 +182,24 @@ defineEmits<{
             v-for="item in items"
             :key="item.id"
             class="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-pink-300/40 bg-[#1e0e14] shadow-xl group cursor-pointer"
+            :style="{
+              backgroundImage: `url('${item.image || FALLBACK_IMAGE_DATA_URL}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: `${item.positionX ?? 50}% ${item.positionY ?? 50}%`,
+            }"
             @click="$emit('selectPhoto', item)"
           >
             <img
               crossorigin="anonymous"
               loading="eager"
-              :src="item.image"
+              :src="item.image || FALLBACK_IMAGE_DATA_URL"
               :alt="item.name"
-              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 block"
               :style="{
                 transform: `scale(${item.zoom || 1})`,
                 objectPosition: `${item.positionX ?? 50}% ${item.positionY ?? 50}%`,
               }"
+              @error="handleImgError"
             />
             <div
               class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 rounded-lg bg-gradient-to-r from-pink-400 to-rose-300 text-stone-950 font-black px-2 py-0.5 shadow-lg leading-tight flex items-center gap-0.5"
